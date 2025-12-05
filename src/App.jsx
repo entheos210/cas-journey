@@ -3,7 +3,7 @@ import {
   Heart, Zap, PenTool, Plus, Calendar, CheckCircle, Target, Smile, 
   Camera, X, ChevronRight, Trophy, MoreHorizontal, Printer, User, 
   Users, MessageSquare, ThumbsUp, Clock, Layout, Flag, Link, 
-  FileText, Mic, Save, MessageSquarePlus, Edit3, LogOut, Loader, ShieldCheck, Lock, AlertTriangle, Filter, Info, ExternalLink, Grid
+  FileText, Mic, Save, MessageSquarePlus, Edit3, LogOut, Loader, ShieldCheck, Lock, AlertTriangle, Filter, Info, ExternalLink, Grid, Trash2, RotateCcw
 } from 'lucide-react';
 
 // --- Firebase Imports ---
@@ -22,6 +22,7 @@ import {
   onSnapshot, 
   doc, 
   updateDoc,
+  deleteDoc, 
   query,
   setDoc 
 } from 'firebase/firestore';
@@ -44,13 +45,13 @@ const myFirebaseConfig = {
 const TEACHER_WHITELIST = [
   "teacher1@gmail.com",
   "gassak3914@gmail.com",
-  "entheos210@gmail.com" // <--- [수정] 본인 이메일 (교사 테스트용)
+  "entheos210@gmail.com" // 본인 이메일
 ];
 
 const STUDENT_WHITELIST = [
   "student1@gmail.com",
   "gassak3914@gmail.com",
-  "entheos210@gmail.com" // <--- [수정] 본인 이메일 (학생 테스트용)
+  "entheos210@gmail.com" // 본인 이메일
 ];
 // =================================================================
 
@@ -164,7 +165,6 @@ const ProgressBar = ({ label, current, colorClass, icon: Icon }) => {
   );
 };
 
-// [UPDATED] GanttChart Component with Scale Toggle
 const GanttChart = ({ activities, project }) => {
   const [scale, setScale] = useState('monthly'); // 'daily' or 'monthly'
 
@@ -182,38 +182,20 @@ const GanttChart = ({ activities, project }) => {
   const minDate = new Date(Math.min(...startDates)); 
   const maxDate = new Date(Math.max(...endDates));
   
-  // Common Setup
-  const columnWidth = scale === 'daily' ? 30 : 60; // Wider columns for months
+  const columnWidth = scale === 'daily' ? 30 : 60; 
   let rangeStart, rangeEnd, allColumns, getPos;
 
   if (scale === 'daily') {
-      // DAILY LOGIC
       rangeStart = new Date(minDate); rangeStart.setDate(rangeStart.getDate() - 2);
       rangeEnd = new Date(maxDate); rangeEnd.setDate(rangeEnd.getDate() + 2);
-      
-      allColumns = [];
-      let curr = new Date(rangeStart);
-      let safety = 0;
-      while (curr <= rangeEnd && safety < 730) { 
-          allColumns.push(new Date(curr)); 
-          curr.setDate(curr.getDate() + 1); 
-          safety++; 
-      }
+      allColumns = []; let curr = new Date(rangeStart); let safety = 0;
+      while (curr <= rangeEnd && safety < 730) { allColumns.push(new Date(curr)); curr.setDate(curr.getDate() + 1); safety++; }
       getPos = (d1, d2) => Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
-
   } else {
-      // MONTHLY LOGIC
       rangeStart = new Date(minDate.getFullYear(), minDate.getMonth() - 1, 1);
       rangeEnd = new Date(maxDate.getFullYear(), maxDate.getMonth() + 2, 0);
-      
-      allColumns = [];
-      let curr = new Date(rangeStart);
-      let safety = 0;
-      while (curr <= rangeEnd && safety < 60) { 
-          allColumns.push(new Date(curr)); 
-          curr.setMonth(curr.getMonth() + 1); 
-          safety++; 
-      }
+      allColumns = []; let curr = new Date(rangeStart); let safety = 0;
+      while (curr <= rangeEnd && safety < 60) { allColumns.push(new Date(curr)); curr.setMonth(curr.getMonth() + 1); safety++; }
       getPos = (d1, d2) => (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
   }
   
@@ -224,7 +206,6 @@ const GanttChart = ({ activities, project }) => {
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-bold text-slate-800 flex items-center gap-2"><Layout size={18} className="text-blue-500"/> 활동 타임라인</h3>
         <div className="flex items-center gap-2">
-            {/* Scale Toggle Buttons */}
             <div className="flex bg-slate-100 p-1 rounded-lg text-xs font-bold">
                 <button onClick={() => setScale('daily')} className={`px-3 py-1 rounded-md transition-colors ${scale==='daily' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>일간</button>
                 <button onClick={() => setScale('monthly')} className={`px-3 py-1 rounded-md transition-colors ${scale==='monthly' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>월간</button>
@@ -234,41 +215,28 @@ const GanttChart = ({ activities, project }) => {
       </div>
       <div className="overflow-x-auto pb-2">
         <div className="min-w-max"> 
-            {/* Header */}
             <div className="grid gap-0 mb-2 border-b border-slate-100 pb-2" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
             {allColumns.map((date, i) => {
                 let label = '', subLabel = '';
                 if (scale === 'daily') {
-                    const day = date.getDate();
-                    const month = date.getMonth() + 1;
+                    const day = date.getDate(); const month = date.getMonth() + 1;
                     const isFirstDay = day === 1 || i === 0;
-                    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                    label = day;
-                    if (isFirstDay) subLabel = `${month}월`;
+                    label = day; if (isFirstDay) subLabel = `${month}월`;
                 } else {
                     const monthName = date.toLocaleString('default', { month: 'short' });
                     const year = date.getFullYear().toString().slice(2);
                     const isNewYear = date.getMonth() === 0 || i === 0;
-                    label = monthName;
-                    if (isNewYear) subLabel = `'${year}`;
+                    label = monthName; if (isNewYear) subLabel = `'${year}`;
                 }
-
                 const isWeekend = scale === 'daily' && (date.getDay() === 0 || date.getDay() === 6);
-
                 return (
                     <div key={i} className={`text-[10px] text-center border-l border-transparent relative h-8 flex flex-col justify-end ${isWeekend ? 'bg-slate-50' : ''}`}>
-                        {subLabel && (
-                            <span className="absolute top-0 left-0 pl-1 text-xs font-bold text-blue-600 whitespace-nowrap z-10">
-                                {subLabel}
-                            </span>
-                        )}
+                        {subLabel && <span className="absolute top-0 left-0 pl-1 text-xs font-bold text-blue-600 whitespace-nowrap z-10">{subLabel}</span>}
                         <span className={`${subLabel ? 'font-bold text-slate-800' : 'text-slate-400'}`}>{label}</span>
                     </div>
                 );
             })}
             </div>
-
-            {/* Bars */}
             <div className="space-y-3 relative min-h-[100px]">
                 <div className="absolute inset-0 grid gap-0 h-full pointer-events-none" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
                     {allColumns.map((date, i) => {
@@ -276,21 +244,11 @@ const GanttChart = ({ activities, project }) => {
                          return <div key={i} className={`border-r border-slate-50 h-full ${isWeekend ? 'bg-slate-50/50' : ''}`}></div>
                     })}
                 </div>
-
                 {sortedItems.map((item, idx) => {
-                    const actStart = new Date(item.startDate); 
-                    const actEnd = new Date(item.endDate); 
-                    
-                    // Calculate positions
+                    const actStart = new Date(item.startDate); const actEnd = new Date(item.endDate); 
                     let startCol, duration;
-                    
-                    if (scale === 'daily') {
-                        startCol = getPos(rangeStart, actStart) + 1;
-                        duration = Math.max(getPos(actStart, actEnd) + 1, 1);
-                    } else {
-                        startCol = getPos(rangeStart, actStart) + 1;
-                        duration = Math.max(getPos(actStart, actEnd) + 1, 1);
-                    }
+                    if (scale === 'daily') { startCol = getPos(rangeStart, actStart) + 1; duration = Math.max(getPos(actStart, actEnd) + 1, 1); } 
+                    else { startCol = getPos(rangeStart, actStart) + 1; duration = Math.max(getPos(actStart, actEnd) + 1, 1); }
                     
                     let bg = {}, bdr = '', txt = '';
                     if (item.types?.includes('Project')) { bg={background:'#2563eb'}; bdr='#1d4ed8'; txt='#fff'; }
@@ -300,20 +258,12 @@ const GanttChart = ({ activities, project }) => {
                         bg={background: colors.length > 1 ? `linear-gradient(to bottom, ${stops.join(',')})` : colors[0]}; 
                         bdr='#94a3b8'; txt='#1e293b';
                     }
-
                     return (
                         <div key={item.id || idx} className="grid gap-0 relative z-10 group" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
-                            <div 
-                                className="h-6 rounded border flex items-center px-2 text-[10px] font-bold truncate shadow-sm transition-all hover:opacity-90 hover:h-8 hover:-mt-1 hover:z-20"
-                                style={{ 
-                                    gridColumnStart: startCol, 
-                                    gridColumnEnd: `span ${duration}`, 
-                                    ...bg, borderColor: bdr, color: txt 
-                                }} 
-                                title={`${item.title} (${item.startDate} ~ ${item.endDate})`}
-                            >
-                                {item.types?.includes('Project') && <Flag size={10} className="mr-1 fill-current" />}
-                                {item.title}
+                            <div className="h-6 rounded border flex items-center px-2 text-[10px] font-bold truncate shadow-sm transition-all hover:opacity-90 hover:h-8 hover:-mt-1 hover:z-20"
+                                style={{ gridColumnStart: startCol, gridColumnEnd: `span ${duration}`, ...bg, borderColor: bdr, color: txt }} 
+                                title={`${item.title} (${item.startDate} ~ ${item.endDate})`}>
+                                {item.types?.includes('Project') && <Flag size={10} className="mr-1 fill-current" />}{item.title}
                             </div>
                         </div>
                     );
@@ -333,18 +283,12 @@ const CASProjectSection = ({ project, onEdit }) => {
 const EditProjectModal = ({ project, onClose, onSave }) => {
     const [data, setData] = useState(project || { title: '', status: 'Planned', startDate: '', endDate: '', description: '', isCollaborative: false });
     const [error, setError] = useState(null);
-
     const handleSave = (e) => { 
         e.preventDefault(); 
         if(data.status === 'Completed') {
-            const start = new Date(data.startDate);
-            const end = new Date(data.endDate);
-            const diffTime = Math.abs(end - start);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-            if (diffDays < 30) {
-                setError("프로젝트 기간이 최소 1개월 이상이어야 '완료'할 수 있습니다.");
-                return;
-            }
+            const start = new Date(data.startDate); const end = new Date(data.endDate);
+            const diffTime = Math.abs(end - start); const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            if (diffDays < 30) { setError("프로젝트 기간이 최소 1개월 이상이어야 '완료'할 수 있습니다."); return; }
         }
         onSave(data); onClose(); 
     };
@@ -358,13 +302,7 @@ const AddActivityModal = ({ onClose, onSave }) => {
     const [data, setData] = useState({ title: '', types: ['Creativity'], hours: 0, startDate: new Date().toISOString().split('T')[0], endDate: new Date().toISOString().split('T')[0], reflection: '', outcomes: [], attachments: [] });
     const toggleType = (t) => { const has = data.types.includes(t); if(has && data.types.length===1) return; setData({...data, types: has ? data.types.filter(x=>x!==t) : [...data.types, t]}); };
     const toggleOutcome = (id) => { setData(prev => ({ ...prev, outcomes: prev.outcomes.includes(id) ? prev.outcomes.filter(oid => oid !== id) : [...prev.outcomes, id] })); };
-    
-    const addEvidence = (type) => {
-        const promptText = type === 'Link' ? "웹사이트 주소(URL)를 입력하세요:" : "구글 드라이브 공유 링크(URL)를 입력하세요:";
-        const val = prompt(promptText);
-        if(val) setData(prev => ({...prev, attachments: [...prev.attachments, { type, val }] }));
-    };
-
+    const addEvidence = (type) => { const promptText = type === 'Link' ? "웹사이트 주소(URL)를 입력하세요:" : "구글 드라이브 공유 링크(URL)를 입력하세요:"; const val = prompt(promptText); if(val) setData(prev => ({...prev, attachments: [...prev.attachments, { type, val }] })); };
     const handleSave = () => { if(!data.title || !data.hours) return; onSave({ ...data, createdAt: Date.now(), hours: Number(data.hours) }); onClose(); };
 
     return (
@@ -374,36 +312,7 @@ const AddActivityModal = ({ onClose, onSave }) => {
                 <div className="p-6 overflow-y-auto flex-1 space-y-4">
                     {step === 1 && (<><div><label className="block text-sm font-bold mb-1">활동 제목 (Title)</label><input className="w-full p-3 border rounded-xl" value={data.title} onChange={e=>setData({...data, title:e.target.value})}/></div><div><label className="block text-sm font-bold mb-1">종류 (Type)</label><div className="flex flex-col gap-2">{['Creativity','Activity','Service'].map(t=><button key={t} onClick={()=>toggleType(t)} className={`p-2 border rounded text-sm font-bold text-left ${data.types.includes(t)?'bg-blue-100 border-blue-500 text-blue-700':'bg-slate-50 text-slate-400'}`}>{t} {data.types.includes(t) && <CheckCircle size={14} className="inline ml-1"/>}</button>)}</div></div><div><label className="block text-sm font-bold mb-1">시간 (Hours)</label><input type="number" className="w-full p-3 border rounded-xl" placeholder="시간" value={data.hours} onChange={e=>setData({...data, hours:e.target.value})}/></div><div className="flex gap-2"><div className="flex-1"><label className="block text-sm font-bold mb-1">시작일 (Start)</label><input type="date" className="w-full p-3 border rounded-xl" value={data.startDate} onChange={e=>setData({...data, startDate:e.target.value})}/></div><div className="flex-1"><label className="block text-sm font-bold mb-1">종료일 (End)</label><input type="date" className="w-full p-3 border rounded-xl" value={data.endDate} onChange={e=>setData({...data, endDate:e.target.value})}/></div></div></>)}
                     {step === 2 && (<div className="space-y-2">{LEARNING_OUTCOMES.map(lo => (<button key={lo.id} onClick={()=>toggleOutcome(lo.id)} className={`w-full text-left p-3 border rounded-xl flex items-center gap-3 ${data.outcomes.includes(lo.id)?'bg-blue-50 border-blue-500 text-blue-800':''}`}><span className="text-xl">{lo.icon}</span><span className="text-sm font-medium">{lo.text}</span>{data.outcomes.includes(lo.id) && <CheckCircle size={16} className="ml-auto"/>}</button>))}</div>)}
-                    {step === 3 && (<>
-                        <div className="bg-blue-50 p-4 rounded-xl space-y-2">
-                            <p className="text-xs font-bold text-blue-600 uppercase flex items-center gap-1"><Info size={12}/> 성찰 가이드 (Reflection Guide)</p>
-                            <div className="text-xs text-slate-700 space-y-1">
-                                <p><strong>1. Why:</strong> 왜 이 활동을 시작했나요? 동기와 목표는?</p>
-                                <p><strong>2. What & Obstacles:</strong> 어떤 어려움이 있었고 어떻게 극복했나요?</p>
-                                <p><strong>3. So What:</strong> 이 경험을 통해 무엇을 배웠고 어떤 의미가 있나요?</p>
-                                <p><strong>4. Now What:</strong> 이 배움을 앞으로 어떻게 적용할까요?</p>
-                            </div>
-                        </div>
-                        <textarea className="w-full p-3 border rounded-xl min-h-[200px] text-sm" placeholder="가이드를 참고하여 성찰 내용을 작성해주세요..." value={data.reflection} onChange={e=>setData({...data, reflection:e.target.value})}/>
-                        
-                        <div>
-                            <span className="block text-sm font-bold text-slate-700 mb-2">증빙 자료 추가 (Add Evidence)</span>
-                            <div className="text-xs text-slate-500 mb-2 bg-slate-100 p-2 rounded">💡 팁: 사진, 영상, 파일은 <strong>구글 드라이브</strong>에 업로드 후 '링크 복사'하여 입력해주세요.</div>
-                            <div className="grid grid-cols-4 gap-2 text-center text-xs mb-2">
-                                <button onClick={() => addEvidence('Media')} className="p-2 border rounded hover:bg-slate-50"><Camera size={16} className="mx-auto mb-1"/>사진/영상</button>
-                                <button onClick={() => addEvidence('Audio')} className="p-2 border rounded hover:bg-slate-50"><Mic size={16} className="mx-auto mb-1"/>오디오</button>
-                                <button onClick={() => addEvidence('Link')} className="p-2 border rounded hover:bg-slate-50"><Link size={16} className="mx-auto mb-1"/>링크</button>
-                                <button onClick={() => addEvidence('File')} className="p-2 border rounded hover:bg-slate-50"><FileText size={16} className="mx-auto mb-1"/>파일</button>
-                            </div>
-                            <div className="space-y-1">
-                                {data.attachments?.map((att, i) => (
-                                    <div key={i} className="text-xs bg-slate-100 p-2 rounded flex items-center gap-2">
-                                        <span className="font-bold text-blue-600">[{att.type}]</span> <span className="truncate flex-1">{att.val}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </>)}
+                    {step === 3 && (<><div className="bg-blue-50 p-4 rounded-xl space-y-2"><p className="text-xs font-bold text-blue-600 uppercase flex items-center gap-1"><Info size={12}/> 성찰 가이드 (Reflection Guide)</p><div className="text-xs text-slate-700 space-y-1"><p><strong>1. Why:</strong> 왜 이 활동을 시작했나요? 동기와 목표는?</p><p><strong>2. What & Obstacles:</strong> 어떤 어려움이 있었고 어떻게 극복했나요?</p><p><strong>3. So What:</strong> 이 경험을 통해 무엇을 배웠고 어떤 의미가 있나요?</p><p><strong>4. Now What:</strong> 이 배움을 앞으로 어떻게 적용할까요?</p></div></div><textarea className="w-full p-3 border rounded-xl min-h-[200px] text-sm" placeholder="가이드를 참고하여 성찰 내용을 작성해주세요..." value={data.reflection} onChange={e=>setData({...data, reflection:e.target.value})}/><div><span className="block text-sm font-bold text-slate-700 mb-2">증빙 자료 추가 (Add Evidence)</span><div className="text-xs text-slate-500 mb-2 bg-slate-100 p-2 rounded">💡 팁: 사진, 영상, 파일은 <strong>구글 드라이브</strong>에 업로드 후 '링크 복사'하여 입력해주세요.</div><div className="grid grid-cols-4 gap-2 text-center text-xs mb-2"><button onClick={() => addEvidence('Media')} className="p-2 border rounded hover:bg-slate-50"><Camera size={16} className="mx-auto mb-1"/>사진/영상</button><button onClick={() => addEvidence('Audio')} className="p-2 border rounded hover:bg-slate-50"><Mic size={16} className="mx-auto mb-1"/>오디오</button><button onClick={() => addEvidence('Link')} className="p-2 border rounded hover:bg-slate-50"><Link size={16} className="mx-auto mb-1"/>링크</button><button onClick={() => addEvidence('File')} className="p-2 border rounded hover:bg-slate-50"><FileText size={16} className="mx-auto mb-1"/>파일</button></div><div className="space-y-1">{data.attachments?.map((att, i) => (<div key={i} className="text-xs bg-slate-100 p-2 rounded flex items-center gap-2"><span className="font-bold text-blue-600">[{att.type}]</span> <span className="truncate flex-1">{att.val}</span></div>))}</div></div></>)}
                 </div>
                 <div className="p-5 border-t flex gap-2">
                     {step > 1 && <button onClick={()=>setStep(s=>s-1)} className="px-6 py-3 rounded-xl font-bold bg-slate-100">이전 (Back)</button>}
@@ -416,7 +325,7 @@ const AddActivityModal = ({ onClose, onSave }) => {
     );
 };
 
-const ActivityCard = ({ activity, isTeacherMode, onApprove, onFeedback }) => {
+const ActivityCard = ({ activity, isTeacherMode, onApprove, onRevoke, onFeedback, onDelete }) => {
     const [open, setOpen] = useState(false);
     const [fb, setFb] = useState('');
 
@@ -436,6 +345,8 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onFeedback }) => {
                     {activity.types?.map(type => { const colors = getTypeColor(type); return <span key={type} className={`inline-block px-2 py-1 rounded text-xs font-bold border ${colors.label}`}>{type === 'Creativity' ? '창의 (C)' : type === 'Activity' ? '활동 (A)' : '봉사 (S)'}</span> })}
                     <span className={`inline-block px-2 py-1 rounded text-xs font-bold border ${activity.status==='Approved'?'bg-green-100 text-green-600 border-green-200':'bg-orange-100 text-orange-600 border-orange-200'}`}>{activity.status==='Approved'?'승인됨 (Approved)':'검토 중 (Pending)'}</span>
                 </div>
+                {/* Delete Button */}
+                <button onClick={() => onDelete(activity.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 self-start" title="활동 삭제"><Trash2 size={16} /></button>
             </div>
             <h3 className="font-bold text-lg mb-1">{activity.title}</h3>
             <div className="text-sm text-slate-500 mb-3 flex items-center gap-2"><Calendar size={14}/> {activity.startDate} ~ {activity.endDate} • {activity.hours}h {isTeacherMode && <span className="bg-slate-100 px-2 rounded text-xs ml-2">{activity.studentName}</span>}</div>
@@ -462,7 +373,17 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onFeedback }) => {
             {isTeacherMode && (
                 <div className="flex gap-2 mt-3 justify-end border-t pt-3">
                     <button onClick={()=>setOpen(!open)} className="text-blue-600 text-sm font-bold flex items-center gap-1"><MessageSquarePlus size={16}/> 피드백</button>
-                    {activity.status==='Pending' && <button onClick={()=>onApprove(activity.id)} className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1"><ThumbsUp size={14}/> 승인</button>}
+                    
+                    {/* Conditional Approval Button */}
+                    {activity.status === 'Pending' ? (
+                        <button onClick={()=>onApprove(activity.id)} className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-green-600 transition-colors">
+                            <ThumbsUp size={14}/> 승인
+                        </button>
+                    ) : (
+                        <button onClick={()=>onRevoke(activity.id)} className="bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-600 transition-colors">
+                            <RotateCcw size={14}/> 승인 취소
+                        </button>
+                    )}
                 </div>
             )}
             {open && (
@@ -535,11 +456,29 @@ const App = () => {
       } catch(e) { alert("승인 중 오류 발생: " + e.message); }
   };
 
+  const handleRevoke = async (id) => {
+      if (!db) return;
+      try {
+          await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', String(id)), { status: 'Pending' });
+      } catch(e) { alert("승인 취소 중 오류 발생: " + e.message); }
+  };
+
   const handleFeedback = async (id, text) => {
       if (!db) return;
       try {
           await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', String(id)), { feedback: text });
       } catch(e) { alert("피드백 저장 실패: " + e.message); }
+  };
+
+  const handleDeleteActivity = async (id) => {
+      if (!db || !user) return;
+      if (window.confirm("정말로 이 활동을 삭제하시겠습니까? 복구할 수 없습니다.")) {
+          try {
+              await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', id));
+          } catch (e) {
+              alert("삭제 실패: " + e.message);
+          }
+      }
   };
 
   const handleSaveProject = async (updatedProject) => {
@@ -606,7 +545,7 @@ const App = () => {
                 <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">{role === 'student' ? <><Smile size={20} className="text-orange-500"/> 최근 활동</> : <><Users size={20} className="text-orange-500"/> {selectedStudent === 'all' ? '전체 활동' : '학생 활동'}</>}</h2>
                 {role==='student' && <button onClick={()=>setShowModal(true)} className="bg-blue-600 text-white px-4 py-2 rounded-xl flex items-center gap-1 font-bold shadow-md hover:bg-blue-700 transition-all"><Plus size={18}/> 활동 추가</button>}
             </div>
-            {myActivities.length > 0 ? myActivities.map(a => <ActivityCard key={a.id} activity={a} isTeacherMode={role==='teacher'} onApprove={handleApprove} onFeedback={handleFeedback} />) : <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-slate-200"><p className="text-slate-400">표시할 활동이 없습니다.</p></div>}
+            {myActivities.length > 0 ? myActivities.map(a => <ActivityCard key={a.id} activity={a} isTeacherMode={role==='teacher'} onApprove={handleApprove} onRevoke={handleRevoke} onFeedback={handleFeedback} onDelete={handleDeleteActivity} />) : <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-slate-200"><p className="text-slate-400">표시할 활동이 없습니다.</p></div>}
         </section>
       </main>
       
