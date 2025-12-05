@@ -43,16 +43,14 @@ const myFirebaseConfig = {
 // =================================================================
 const TEACHER_WHITELIST = [
   "teacher1@gmail.com",
-  "principal@school.edu",
   "gassak3914@gmail.com",
-  "entheos210@gmail.com" // 본인 이메일
+  "entheos210@gmail.com" // <--- [수정] 본인 이메일 (교사 테스트용)
 ];
 
 const STUDENT_WHITELIST = [
   "student1@gmail.com",
-  "kim.student@school.edu",
   "gassak3914@gmail.com",
-  "entheos210@gmail.com" // 본인 이메일
+  "entheos210@gmail.com" // <--- [수정] 본인 이메일 (학생 테스트용)
 ];
 // =================================================================
 
@@ -122,7 +120,7 @@ const LoginView = ({ onLogin, errorMsg }) => {
   );
 };
 
-// [NEW] LO Visual Progress Component
+// [NEW] LO Visual Progress Component with Tooltips
 const LearningOutcomesProgress = ({ achievedSet }) => {
   return (
     <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
@@ -133,11 +131,16 @@ const LearningOutcomesProgress = ({ achievedSet }) => {
         {LEARNING_OUTCOMES.map((lo) => {
           const isMet = achievedSet.has(lo.id);
           return (
-            <div key={lo.id} className="flex flex-col items-center gap-1 group">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all shadow-sm ${isMet ? 'bg-blue-500 text-white scale-110 ring-2 ring-blue-200' : 'bg-slate-100 text-slate-300 grayscale'}`} title={lo.text}>
+            <div key={lo.id} className="relative flex flex-col items-center gap-1 group cursor-help">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all shadow-sm ${isMet ? 'bg-blue-500 text-white scale-110 ring-2 ring-blue-200' : 'bg-slate-100 text-slate-300 grayscale'}`}>
                 {lo.icon}
               </div>
               <span className={`text-[10px] font-bold ${isMet ? 'text-blue-600' : 'text-slate-300'}`}>{lo.code}</span>
+              
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-slate-800 text-white text-xs rounded-lg shadow-xl z-50 text-center leading-tight">
+                {lo.text}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
+              </div>
             </div>
           );
         })}
@@ -172,36 +175,115 @@ const GanttChart = ({ activities, project }) => {
   const getSortOrder = (item) => Math.min(...(item.types?.map(t => typeOrder[t] || 5) || [5]));
   const sortedItems = [...allItems].sort((a, b) => getSortOrder(a) - getSortOrder(b) || new Date(a.startDate) - new Date(b.startDate));
   
+  // [MODIFIED] Date Range Calculation (Day basis)
   const startDates = sortedItems.map(a => new Date(a.startDate || new Date())); 
   const endDates = sortedItems.map(a => new Date(a.endDate || new Date()));
+  
   const minDate = new Date(Math.min(...startDates)); 
   const maxDate = new Date(Math.max(...endDates));
-  const rangeStart = new Date(minDate.getFullYear(), minDate.getMonth() - 1, 1); 
-  const rangeEnd = new Date(maxDate.getFullYear(), maxDate.getMonth() + 2, 0);
+  
+  // Add buffer days (2 days before and after)
+  const rangeStart = new Date(minDate); 
+  rangeStart.setDate(rangeStart.getDate() - 2);
+  
+  const rangeEnd = new Date(maxDate);
+  rangeEnd.setDate(rangeEnd.getDate() + 2);
 
-  const allMonths = []; const curr = new Date(rangeStart);
-  while (curr <= rangeEnd) { allMonths.push(new Date(curr)); curr.setMonth(curr.getMonth() + 1); }
-  const getMonthDiff = (d1, d2) => (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
-  const totalColumns = allMonths.length;
+  const allDays = []; 
+  const curr = new Date(rangeStart);
+  
+  // Safety limit to prevent infinite loops
+  let safety = 0;
+  while (curr <= rangeEnd && safety < 730) { // Limit to approx 2 years
+      allDays.push(new Date(curr)); 
+      curr.setDate(curr.getDate() + 1); 
+      safety++; 
+  }
+
+  const getDayDiff = (d1, d2) => {
+      const diffTime = d2.getTime() - d1.getTime();
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+  
+  const totalColumns = allDays.length;
+  const columnWidth = 30; // px per day
 
   return (
     <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 overflow-hidden print:border-slate-300">
-      <div className="flex justify-between items-center mb-4"><h3 className="font-bold text-slate-800 flex items-center gap-2"><Layout size={18} className="text-blue-500"/> 활동 타임라인 (Activity Timeline)</h3><span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">{rangeStart.getFullYear()}.{rangeStart.getMonth()+1} ~ {rangeEnd.getFullYear()}.{rangeEnd.getMonth()+1}</span></div>
-      <div className="overflow-x-auto pb-2"><div className="min-w-max" style={{ width: `${Math.max(100, totalColumns * 6)}%` }}> 
-            <div className="grid gap-1 mb-2 border-b border-slate-100 pb-2" style={{ gridTemplateColumns: `repeat(${totalColumns}, minmax(40px, 1fr))` }}>{allMonths.map((date, i) => { const monthName = date.toLocaleString('default', { month: 'short' }); const year = date.getFullYear().toString().slice(2); return (<div key={i} className={`text-xs text-center ${date.getMonth() === 0 || i===0 ? 'font-bold text-slate-800' : 'text-slate-400'}`}>{date.getMonth()===0 && <span className="block text-[10px] text-blue-500">'{year}</span>}{monthName}</div>); })}</div>
-            <div className="space-y-3 relative min-h-[100px]"><div className="absolute inset-0 grid gap-1 h-full pointer-events-none" style={{ gridTemplateColumns: `repeat(${totalColumns}, minmax(40px, 1fr))` }}>{allMonths.map((_, i) => (<div key={i} className="border-r border-slate-50 h-full"></div>))}</div>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-bold text-slate-800 flex items-center gap-2"><Layout size={18} className="text-blue-500"/> 활동 타임라인 (Daily)</h3>
+        <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">{rangeStart.toLocaleDateString()} ~ {rangeEnd.toLocaleDateString()}</span>
+      </div>
+      <div className="overflow-x-auto pb-2">
+        <div className="min-w-max"> 
+            {/* Day Header */}
+            <div className="grid gap-0 mb-2 border-b border-slate-100 pb-2" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
+            {allDays.map((date, i) => {
+                const day = date.getDate();
+                const month = date.getMonth() + 1;
+                const isFirstDay = day === 1 || i === 0;
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                
+                return (
+                    <div key={i} className={`text-[10px] text-center border-l border-transparent relative h-8 flex flex-col justify-end ${isWeekend ? 'bg-slate-50' : ''}`}>
+                        {isFirstDay && (
+                            <span className="absolute top-0 left-0 pl-1 text-xs font-bold text-blue-600 whitespace-nowrap z-10">
+                                {month}월
+                            </span>
+                        )}
+                        <span className={`${isFirstDay ? 'font-bold text-slate-800' : 'text-slate-400'}`}>{day}</span>
+                    </div>
+                );
+            })}
+            </div>
+
+            {/* Bars Container */}
+            <div className="space-y-3 relative min-h-[100px]">
+                {/* Background Grid Lines */}
+                <div className="absolute inset-0 grid gap-0 h-full pointer-events-none" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
+                    {allDays.map((date, i) => {
+                         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                         return <div key={i} className={`border-r border-slate-50 h-full ${isWeekend ? 'bg-slate-50/50' : ''}`}></div>
+                    })}
+                </div>
+
                 {sortedItems.map((item, idx) => {
-                    const actStart = new Date(item.startDate); const actEnd = new Date(item.endDate); const startCol = getMonthDiff(rangeStart, actStart) + 1; const duration = Math.max(getMonthDiff(actStart, actEnd) + 1, 1);
+                    const actStart = new Date(item.startDate); 
+                    const actEnd = new Date(item.endDate); 
+                    
+                    const startCol = getDayDiff(rangeStart, actStart) + 1;
+                    const duration = Math.max(getDayDiff(actStart, actEnd) + 1, 1);
+                    
                     let bg = {}, bdr = '', txt = '';
                     if (item.types?.includes('Project')) { bg={background:'#2563eb'}; bdr='#1d4ed8'; txt='#fff'; }
                     else { 
                         const colors = item.types?.map(t => getTypeColor(t).bg) || ['#eee'];
                         const stops = colors.map((c, i) => `${c} ${(i/colors.length)*100}% ${((i+1)/colors.length)*100}%`);
-                        bg={background: colors.length > 1 ? `linear-gradient(to bottom, ${stops.join(',')})` : colors[0]}; bdr='#94a3b8'; txt='#1e293b';
+                        bg={background: colors.length > 1 ? `linear-gradient(to bottom, ${stops.join(',')})` : colors[0]}; 
+                        bdr='#94a3b8'; txt='#1e293b';
                     }
-                    return (<div key={item.id || idx} className="grid gap-1 relative z-10 group" style={{ gridTemplateColumns: `repeat(${totalColumns}, minmax(40px, 1fr))` }}><div className="h-8 rounded-lg border flex items-center px-2 text-xs font-bold truncate shadow-sm" style={{ gridColumnStart: startCol, gridColumnEnd: `span ${duration}`, ...bg, borderColor: bdr, color: txt }} title={`${item.title}`}>{item.types?.includes('Project') && <Flag size={12} className="mr-1 fill-current" />}{item.title}</div></div>);
+
+                    return (
+                        <div key={item.id || idx} className="grid gap-0 relative z-10 group" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
+                            <div 
+                                className="h-6 rounded border flex items-center px-2 text-[10px] font-bold truncate shadow-sm transition-all hover:opacity-90 hover:h-8 hover:-mt-1 hover:z-20"
+                                style={{ 
+                                    gridColumnStart: startCol, 
+                                    gridColumnEnd: `span ${duration}`, 
+                                    ...bg, borderColor: bdr, color: txt 
+                                }} 
+                                title={`${item.title} (${item.startDate} ~ ${item.endDate})`}
+                            >
+                                {item.types?.includes('Project') && <Flag size={10} className="mr-1 fill-current" />}
+                                {item.title}
+                            </div>
+                        </div>
+                    );
                 })}
-            </div></div></div></div>
+            </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -239,7 +321,6 @@ const AddActivityModal = ({ onClose, onSave }) => {
     const toggleType = (t) => { const has = data.types.includes(t); if(has && data.types.length===1) return; setData({...data, types: has ? data.types.filter(x=>x!==t) : [...data.types, t]}); };
     const toggleOutcome = (id) => { setData(prev => ({ ...prev, outcomes: prev.outcomes.includes(id) ? prev.outcomes.filter(oid => oid !== id) : [...prev.outcomes, id] })); };
     
-    // [NEW] Google Drive Link Handler
     const addEvidence = (type) => {
         const promptText = type === 'Link' ? "웹사이트 주소(URL)를 입력하세요:" : "구글 드라이브 공유 링크(URL)를 입력하세요:";
         const val = prompt(promptText);
@@ -299,8 +380,17 @@ const AddActivityModal = ({ onClose, onSave }) => {
 
 const ActivityCard = ({ activity, isTeacherMode, onApprove, onFeedback }) => {
     const [open, setOpen] = useState(false);
-    const [fb, setFb] = useState(activity.feedback || '');
-    const handleSaveFeedback = () => { onFeedback(activity.id, fb); setOpen(false); };
+    const [fb, setFb] = useState('');
+
+    // Update local state when prop changes (for real-time update)
+    useEffect(() => {
+        if(activity.feedback) setFb(activity.feedback);
+    }, [activity.feedback]);
+
+    const handleSaveFeedback = () => { 
+        onFeedback(activity.id, fb); 
+        setOpen(false); 
+    };
 
     return (
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-4">
@@ -340,7 +430,6 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onFeedback }) => {
             )}
             {open && (
                 <div className="mt-2 bg-blue-50 p-3 rounded-xl">
-                    {/* Teacher Feedback Guide */}
                     <div className="text-xs text-blue-800 mb-2 p-2 bg-blue-100 rounded opacity-70">
                         💡 <strong>피드백 팁:</strong> 1. 칭찬(구체적 노력) 2. 질문(생각 확장) 3. 제안(다음 단계)
                     </div>
@@ -402,14 +491,20 @@ const App = () => {
       setShowModal(false);
   };
 
+  // [FIX] Added Try-Catch & Alerts
   const handleApprove = async (id) => {
       if (!db) return;
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', id), { status: 'Approved' });
+      try {
+          await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', id), { status: 'Approved' });
+      } catch(e) { alert("승인 중 오류 발생: " + e.message); }
   };
 
+  // [FIX] Added Try-Catch & Alerts
   const handleFeedback = async (id, text) => {
       if (!db) return;
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', id), { feedback: text });
+      try {
+          await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', id), { feedback: text });
+      } catch(e) { alert("피드백 저장 실패: " + e.message); }
   };
 
   const handleSaveProject = async (updatedProject) => {
