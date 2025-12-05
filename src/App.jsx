@@ -3,7 +3,7 @@ import {
   Heart, Zap, PenTool, Plus, Calendar, CheckCircle, Target, Smile, 
   Camera, X, ChevronRight, Trophy, MoreHorizontal, Printer, User, 
   Users, MessageSquare, ThumbsUp, Clock, Layout, Flag, Link, 
-  FileText, Mic, Save, MessageSquarePlus, Edit3, LogOut, Loader, ShieldCheck, Lock, AlertTriangle, Filter, Info, ExternalLink
+  FileText, Mic, Save, MessageSquarePlus, Edit3, LogOut, Loader, ShieldCheck, Lock, AlertTriangle, Filter, Info, ExternalLink, Grid
 } from 'lucide-react';
 
 // --- Firebase Imports ---
@@ -120,7 +120,7 @@ const LoginView = ({ onLogin, errorMsg }) => {
   );
 };
 
-// [NEW] LO Visual Progress Component with Tooltips
+// LO Visual Progress Component
 const LearningOutcomesProgress = ({ achievedSet }) => {
   return (
     <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
@@ -136,7 +136,6 @@ const LearningOutcomesProgress = ({ achievedSet }) => {
                 {lo.icon}
               </div>
               <span className={`text-[10px] font-bold ${isMet ? 'text-blue-600' : 'text-slate-300'}`}>{lo.code}</span>
-              
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-slate-800 text-white text-xs rounded-lg shadow-xl z-50 text-center leading-tight">
                 {lo.text}
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
@@ -165,7 +164,10 @@ const ProgressBar = ({ label, current, colorClass, icon: Icon }) => {
   );
 };
 
+// [UPDATED] GanttChart Component with Scale Toggle
 const GanttChart = ({ activities, project }) => {
+  const [scale, setScale] = useState('monthly'); // 'daily' or 'monthly'
+
   const projectItem = project && project.title ? { id: 'project-main', title: `[프로젝트] ${project.title}`, startDate: project.startDate, endDate: project.endDate, types: ['Project'], isProject: true } : null;
   const allItems = [...activities]; if (projectItem) allItems.push(projectItem);
   
@@ -175,74 +177,102 @@ const GanttChart = ({ activities, project }) => {
   const getSortOrder = (item) => Math.min(...(item.types?.map(t => typeOrder[t] || 5) || [5]));
   const sortedItems = [...allItems].sort((a, b) => getSortOrder(a) - getSortOrder(b) || new Date(a.startDate) - new Date(b.startDate));
   
-  // [MODIFIED] Date Range Calculation (Day basis)
   const startDates = sortedItems.map(a => new Date(a.startDate || new Date())); 
   const endDates = sortedItems.map(a => new Date(a.endDate || new Date()));
-  
   const minDate = new Date(Math.min(...startDates)); 
   const maxDate = new Date(Math.max(...endDates));
   
-  // Add buffer days (2 days before and after)
-  const rangeStart = new Date(minDate); 
-  rangeStart.setDate(rangeStart.getDate() - 2);
-  
-  const rangeEnd = new Date(maxDate);
-  rangeEnd.setDate(rangeEnd.getDate() + 2);
+  // Common Setup
+  const columnWidth = scale === 'daily' ? 30 : 60; // Wider columns for months
+  let rangeStart, rangeEnd, allColumns, getPos;
 
-  const allDays = []; 
-  const curr = new Date(rangeStart);
-  
-  // Safety limit to prevent infinite loops
-  let safety = 0;
-  while (curr <= rangeEnd && safety < 730) { // Limit to approx 2 years
-      allDays.push(new Date(curr)); 
-      curr.setDate(curr.getDate() + 1); 
-      safety++; 
+  if (scale === 'daily') {
+      // DAILY LOGIC
+      rangeStart = new Date(minDate); rangeStart.setDate(rangeStart.getDate() - 2);
+      rangeEnd = new Date(maxDate); rangeEnd.setDate(rangeEnd.getDate() + 2);
+      
+      allColumns = [];
+      let curr = new Date(rangeStart);
+      let safety = 0;
+      while (curr <= rangeEnd && safety < 730) { 
+          allColumns.push(new Date(curr)); 
+          curr.setDate(curr.getDate() + 1); 
+          safety++; 
+      }
+      getPos = (d1, d2) => Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+
+  } else {
+      // MONTHLY LOGIC
+      rangeStart = new Date(minDate.getFullYear(), minDate.getMonth() - 1, 1);
+      rangeEnd = new Date(maxDate.getFullYear(), maxDate.getMonth() + 2, 0);
+      
+      allColumns = [];
+      let curr = new Date(rangeStart);
+      let safety = 0;
+      while (curr <= rangeEnd && safety < 60) { 
+          allColumns.push(new Date(curr)); 
+          curr.setMonth(curr.getMonth() + 1); 
+          safety++; 
+      }
+      getPos = (d1, d2) => (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
   }
-
-  const getDayDiff = (d1, d2) => {
-      const diffTime = d2.getTime() - d1.getTime();
-      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
   
-  const totalColumns = allDays.length;
-  const columnWidth = 30; // px per day
+  const totalColumns = allColumns.length;
 
   return (
     <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 overflow-hidden print:border-slate-300">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="font-bold text-slate-800 flex items-center gap-2"><Layout size={18} className="text-blue-500"/> 활동 타임라인 (Daily)</h3>
-        <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">{rangeStart.toLocaleDateString()} ~ {rangeEnd.toLocaleDateString()}</span>
+        <h3 className="font-bold text-slate-800 flex items-center gap-2"><Layout size={18} className="text-blue-500"/> 활동 타임라인</h3>
+        <div className="flex items-center gap-2">
+            {/* Scale Toggle Buttons */}
+            <div className="flex bg-slate-100 p-1 rounded-lg text-xs font-bold">
+                <button onClick={() => setScale('daily')} className={`px-3 py-1 rounded-md transition-colors ${scale==='daily' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>일간</button>
+                <button onClick={() => setScale('monthly')} className={`px-3 py-1 rounded-md transition-colors ${scale==='monthly' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>월간</button>
+            </div>
+            <span className="text-xs text-slate-400 bg-slate-50 px-2 py-1 rounded hidden sm:inline-block">{rangeStart.toLocaleDateString()} ~ {rangeEnd.toLocaleDateString()}</span>
+        </div>
       </div>
       <div className="overflow-x-auto pb-2">
         <div className="min-w-max"> 
-            {/* Day Header */}
+            {/* Header */}
             <div className="grid gap-0 mb-2 border-b border-slate-100 pb-2" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
-            {allDays.map((date, i) => {
-                const day = date.getDate();
-                const month = date.getMonth() + 1;
-                const isFirstDay = day === 1 || i === 0;
-                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                
+            {allColumns.map((date, i) => {
+                let label = '', subLabel = '';
+                if (scale === 'daily') {
+                    const day = date.getDate();
+                    const month = date.getMonth() + 1;
+                    const isFirstDay = day === 1 || i === 0;
+                    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                    label = day;
+                    if (isFirstDay) subLabel = `${month}월`;
+                } else {
+                    const monthName = date.toLocaleString('default', { month: 'short' });
+                    const year = date.getFullYear().toString().slice(2);
+                    const isNewYear = date.getMonth() === 0 || i === 0;
+                    label = monthName;
+                    if (isNewYear) subLabel = `'${year}`;
+                }
+
+                const isWeekend = scale === 'daily' && (date.getDay() === 0 || date.getDay() === 6);
+
                 return (
                     <div key={i} className={`text-[10px] text-center border-l border-transparent relative h-8 flex flex-col justify-end ${isWeekend ? 'bg-slate-50' : ''}`}>
-                        {isFirstDay && (
+                        {subLabel && (
                             <span className="absolute top-0 left-0 pl-1 text-xs font-bold text-blue-600 whitespace-nowrap z-10">
-                                {month}월
+                                {subLabel}
                             </span>
                         )}
-                        <span className={`${isFirstDay ? 'font-bold text-slate-800' : 'text-slate-400'}`}>{day}</span>
+                        <span className={`${subLabel ? 'font-bold text-slate-800' : 'text-slate-400'}`}>{label}</span>
                     </div>
                 );
             })}
             </div>
 
-            {/* Bars Container */}
+            {/* Bars */}
             <div className="space-y-3 relative min-h-[100px]">
-                {/* Background Grid Lines */}
                 <div className="absolute inset-0 grid gap-0 h-full pointer-events-none" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
-                    {allDays.map((date, i) => {
-                         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                    {allColumns.map((date, i) => {
+                         const isWeekend = scale === 'daily' && (date.getDay() === 0 || date.getDay() === 6);
                          return <div key={i} className={`border-r border-slate-50 h-full ${isWeekend ? 'bg-slate-50/50' : ''}`}></div>
                     })}
                 </div>
@@ -251,8 +281,16 @@ const GanttChart = ({ activities, project }) => {
                     const actStart = new Date(item.startDate); 
                     const actEnd = new Date(item.endDate); 
                     
-                    const startCol = getDayDiff(rangeStart, actStart) + 1;
-                    const duration = Math.max(getDayDiff(actStart, actEnd) + 1, 1);
+                    // Calculate positions
+                    let startCol, duration;
+                    
+                    if (scale === 'daily') {
+                        startCol = getPos(rangeStart, actStart) + 1;
+                        duration = Math.max(getPos(actStart, actEnd) + 1, 1);
+                    } else {
+                        startCol = getPos(rangeStart, actStart) + 1;
+                        duration = Math.max(getPos(actStart, actEnd) + 1, 1);
+                    }
                     
                     let bg = {}, bdr = '', txt = '';
                     if (item.types?.includes('Project')) { bg={background:'#2563eb'}; bdr='#1d4ed8'; txt='#fff'; }
@@ -327,7 +365,7 @@ const AddActivityModal = ({ onClose, onSave }) => {
         if(val) setData(prev => ({...prev, attachments: [...prev.attachments, { type, val }] }));
     };
 
-    const handleSave = () => { if(!data.title || !data.hours) return; onSave({ ...data, id: Date.now(), hours: Number(data.hours) }); onClose(); };
+    const handleSave = () => { if(!data.title || !data.hours) return; onSave({ ...data, createdAt: Date.now(), hours: Number(data.hours) }); onClose(); };
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -368,7 +406,7 @@ const AddActivityModal = ({ onClose, onSave }) => {
                     </>)}
                 </div>
                 <div className="p-5 border-t flex gap-2">
-                    {step > 1 && <button onClick={()=>setStep(s=>s-1)} className="px-6 py-3 rounded-xl font-bold bg-slate-100">이전</button>}
+                    {step > 1 && <button onClick={()=>setStep(s=>s-1)} className="px-6 py-3 rounded-xl font-bold bg-slate-100">이전 (Back)</button>}
                     <button onClick={()=>{if(step<3)setStep(s=>s+1); else handleSave();}} className="flex-1 bg-blue-600 text-white p-3 rounded-xl font-bold flex justify-center items-center gap-2">
                         {step<3 ? <>다음 단계 <ChevronRight size={18}/></> : <>기록 완료 <CheckCircle size={18}/></>}
                     </button>
@@ -382,7 +420,6 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onFeedback }) => {
     const [open, setOpen] = useState(false);
     const [fb, setFb] = useState('');
 
-    // Update local state when prop changes (for real-time update)
     useEffect(() => {
         if(activity.feedback) setFb(activity.feedback);
     }, [activity.feedback]);
@@ -478,7 +515,7 @@ const App = () => {
   useEffect(() => {
     if (!user || !db || !appId) return;
     const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'activities'));
-    const unsub1 = onSnapshot(q, (s) => setActivities(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+    const unsub1 = onSnapshot(q, (s) => setActivities(s.docs.map(d => ({ ...d.data(), id: d.id }))));
     const unsub2 = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${user.uid}`), (d) => { if(d.exists()) setProject(d.data()); });
     return () => { unsub1(); unsub2(); };
   }, [user, role]);
@@ -491,19 +528,17 @@ const App = () => {
       setShowModal(false);
   };
 
-  // [FIX] Added Try-Catch & Alerts
   const handleApprove = async (id) => {
       if (!db) return;
       try {
-          await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', id), { status: 'Approved' });
+          await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', String(id)), { status: 'Approved' });
       } catch(e) { alert("승인 중 오류 발생: " + e.message); }
   };
 
-  // [FIX] Added Try-Catch & Alerts
   const handleFeedback = async (id, text) => {
       if (!db) return;
       try {
-          await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', id), { feedback: text });
+          await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'activities', String(id)), { feedback: text });
       } catch(e) { alert("피드백 저장 실패: " + e.message); }
   };
 
