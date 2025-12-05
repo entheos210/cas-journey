@@ -101,14 +101,20 @@ const LoginView = ({ onLogin, errorMsg }) => {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white max-w-md w-full rounded-3xl shadow-xl p-8 text-center">
         
-        {/* [수정 3] 학교 로고 영역 */}
+        {/* [수정] 학교 로고 영역 (이미지 로딩 실패 방지 추가) */}
         <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-            {/* 실제 학교 로고 URL을 src에 넣으세요. 예: "https://school.edu/logo.png" */}
-            {/* 로고가 없으면 기본 텍스트 이미지가 보입니다. */}
+            {/* [로고 넣는 법]
+                1. 'public' 폴더에 이미지 파일(예: logo.png)을 넣으세요.
+                2. 아래 src="/logo.png" 처럼 파일명 앞에 '/'를 붙여 수정하세요.
+            */}
             <img 
-                src="https://drive.google.com/file/d/19OvpTJZX-O5349KN5sgKGeQgNLfg2D9c/view?usp=sharing" 
+                src="/logo.png" // <--- 여기에 파일명 입력 (예: "/school_logo.png")
                 alt="School Logo" 
-                className="w-full h-full object-contain rounded-full shadow-lg shadow-blue-100"
+                onError={(e) => {
+                    e.target.onerror = null; 
+                    e.target.src = "https://drive.google.com/file/d/19OvpTJZX-O5349KN5sgKGeQgNLfg2D9c/view?usp=sharing"; // 로딩 실패시 기본 이미지
+                }}
+                className="w-full h-full object-contain rounded-full shadow-lg shadow-blue-100 bg-white p-1"
             />
         </div>
 
@@ -353,7 +359,6 @@ const AddActivityModal = ({ onClose, onSave }) => {
     );
 };
 
-// [수정 1] ActivityCard: 구조 변경 및 Delete 버튼 이동
 const ActivityCard = ({ activity, isTeacherMode, onApprove, onRevoke, onFeedback, onDelete }) => {
     const [open, setOpen] = useState(false);
     const [fb, setFb] = useState('');
@@ -369,7 +374,7 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onRevoke, onFeedback
 
     return (
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-4">
-            {/* 상단 헤더 영역 */}
+            {/* 상단 헤더 영역 [수정 1: 상태/삭제 버튼 우측 이동] */}
             <div className="flex justify-between items-start mb-3">
                 {/* 왼쪽: 활동 유형 태그들 */}
                 <div className="flex gap-2 flex-wrap">
