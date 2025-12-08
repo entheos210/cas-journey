@@ -47,7 +47,7 @@ const myFirebaseConfig = {
 const TEACHER_WHITELIST = [
   "teacher1@gmail.com",
   "gassak3914@gmail.com",
-  "entheos210@gmail.com" // 본인 이메일 (테스트용)
+  "my.teacher.email@gmail.com" // 본인 이메일 (테스트용)
 ];
 
 const STUDENT_WHITELIST = [
