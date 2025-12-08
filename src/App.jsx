@@ -28,9 +28,7 @@ import {
 } from 'firebase/firestore';
 
 // =================================================================
-// 🔴 [설정 1] Firebase 키 (본인 것으로 교체 필수!)
-// [참고] 배포 시 보안을 위해 환경 변수(import.meta.env)를 사용하는 것이 좋으나,
-// 현재 미리보기 환경 호환성을 위해 직접 입력 방식으로 복구했습니다.
+// 🔴 [설정 1] Firebase 키 설정
 // =================================================================
 const myFirebaseConfig = {
   apiKey: "AIzaSyA0cmpCyiVuUVeBwpID0HDKKKEd7xngP7U",
@@ -60,26 +58,20 @@ const STUDENT_WHITELIST = [
 let auth, db, appId;
 
 try {
-  // Config 우선순위: 1. 코드 상단 직접 입력 -> 2. 미리보기 환경 변수(__firebase_config)
   const configToUse = myFirebaseConfig.apiKey !== "YOUR_API_KEY_HERE" 
     ? myFirebaseConfig 
     : (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null);
 
   if (configToUse) {
-    // [진단용 로그] 키 앞자리 8글자만 출력하여 확인 (보안상 전체 출력 X)
-    console.log("🔥 [진단 모드] Firebase 초기화 시도");
-    console.log("🔑 현재 적용된 API Key (앞 8자리):", configToUse.apiKey ? configToUse.apiKey.substring(0, 8) + "..." : "없음");
-    
     const app = initializeApp(configToUse);
     auth = getAuth(app);
     db = getFirestore(app);
     appId = configToUse.projectId || 'cas-app';
-    console.log("✅ Firebase 초기화 성공");
   } else {
-    console.warn("⚠️ Firebase Config가 없습니다. 코드를 확인해주세요.");
+    console.warn("Firebase Config Missing");
   }
 } catch (e) {
-  console.error("❌ Firebase 초기화 에러:", e);
+  console.error("Init Error:", e);
 }
 
 // --- Constants ---
@@ -108,21 +100,16 @@ const LoginView = ({ onLogin, errorMsg }) => {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white max-w-md w-full rounded-3xl shadow-xl p-8 text-center">
-        
         <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
             <img 
                 src="/logo.png" 
                 alt="School Logo" 
-                onError={(e) => {
-                    e.target.onerror = null; 
-                    e.target.src = "https://placehold.co/200x200/2563eb/ffffff?text=School"; 
-                }}
+                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/200x200/2563eb/ffffff?text=School"; }}
                 className="w-full h-full object-contain rounded-full shadow-lg shadow-blue-100 bg-white p-1"
             />
         </div>
-
         <h1 className="text-3xl font-black text-slate-800 mb-2">봉황IB CAS</h1>
-        <p className="text-slate-500 mb-8">학생의 성장을 기록하고 공유하는<br/>배움과 베풂이 공존하는</p>
+        <p className="text-slate-500 mb-8">배품과 베풂이 공존하는<br/>지역과 인류 공동체 조성에 기여</p>
         
         {errorMsg && (
             <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm mb-6 flex items-start gap-2 text-left animate-pulse">
@@ -133,17 +120,14 @@ const LoginView = ({ onLogin, errorMsg }) => {
 
         <div className="space-y-3">
           <button onClick={() => onLogin('student')} className="w-full py-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-bold transition-all shadow-sm flex items-center justify-center gap-3">
-            <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)"><path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z"/><path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z"/><path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C -21.864 50.439 -21.724 49.669 -21.484 48.949 L -21.484 45.859 L -25.464 45.859 C -26.284 47.479 -26.754 49.299 -26.754 51.239 C -26.754 53.179 -26.284 54.999 -25.464 56.619 L -21.484 53.529 Z"/><path fill="#EA4335" d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.799 L -6.734 42.379 C -8.804 40.449 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z"/></g></svg>
             학생 로그인 (Student Login)
           </button>
           <button onClick={() => onLogin('teacher')} className="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold transition-all shadow-md flex items-center justify-center gap-2">
             <ShieldCheck size={20} /> 교사 로그인 (Teacher Login)
           </button>
         </div>
-        
         <div className="mt-8 pt-6 border-t border-slate-100 text-xs text-slate-400">
             <p>🔒 등록된 계정만 접속 가능합니다.</p>
-            <p>접속 문의: 담당 선생님</p>
         </div>
       </div>
     </div>
@@ -216,24 +200,21 @@ const GanttChart = ({ activities, project }) => {
   const minDate = new Date(Math.min(...startDates)); 
   const maxDate = new Date(Math.max(...endDates));
   
-  const columnWidth = scale === 'daily' ? 30 : 60; 
-  let rangeStart, rangeEnd, allColumns, getPos;
+  const rangeStart = new Date(minDate.getFullYear(), minDate.getMonth() - 1, 1);
+  const rangeEnd = new Date(maxDate.getFullYear(), maxDate.getMonth() + 2, 0);
 
-  if (scale === 'daily') {
-      rangeStart = new Date(minDate); rangeStart.setDate(rangeStart.getDate() - 2);
-      rangeEnd = new Date(maxDate); rangeEnd.setDate(rangeEnd.getDate() + 2);
-      allColumns = []; let curr = new Date(rangeStart); let safety = 0;
-      while (curr <= rangeEnd && safety < 730) { allColumns.push(new Date(curr)); curr.setDate(curr.getDate() + 1); safety++; }
-      getPos = (d1, d2) => Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
-  } else {
-      rangeStart = new Date(minDate.getFullYear(), minDate.getMonth() - 1, 1);
-      rangeEnd = new Date(maxDate.getFullYear(), maxDate.getMonth() + 2, 0);
-      allColumns = []; let curr = new Date(rangeStart); let safety = 0;
-      while (curr <= rangeEnd && safety < 60) { allColumns.push(new Date(curr)); curr.setMonth(curr.getMonth() + 1); safety++; }
-      getPos = (d1, d2) => (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+  const allMonths = [];
+  const curr = new Date(rangeStart);
+  let safety = 0;
+  while (curr <= rangeEnd && safety < 60) {
+    allMonths.push(new Date(curr));
+    curr.setMonth(curr.getMonth() + 1);
+    safety++;
   }
-  
-  const totalColumns = allColumns.length;
+
+  const getMonthDiff = (d1, d2) => (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
+  const totalColumns = allMonths.length;
+  const columnWidth = scale === 'daily' ? 30 : 60;
 
   return (
     <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 overflow-hidden print:border-slate-300">
@@ -250,53 +231,33 @@ const GanttChart = ({ activities, project }) => {
       <div className="overflow-x-auto pb-2">
         <div className="min-w-max"> 
             <div className="grid gap-0 mb-2 border-b border-slate-100 pb-2" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
-            {allColumns.map((date, i) => {
-                let label = '', subLabel = '';
-                if (scale === 'daily') {
-                    const day = date.getDate(); const month = date.getMonth() + 1;
-                    const isFirstDay = day === 1 || i === 0;
-                    label = day; if (isFirstDay) subLabel = `${month}월`;
-                } else {
-                    const monthName = date.toLocaleString('default', { month: 'short' });
-                    const year = date.getFullYear().toString().slice(2);
-                    const isNewYear = date.getMonth() === 0 || i === 0;
-                    label = monthName; if (isNewYear) subLabel = `'${year}`;
-                }
-                const isWeekend = scale === 'daily' && (date.getDay() === 0 || date.getDay() === 6);
-                return (
-                    <div key={i} className={`text-[10px] text-center border-l border-transparent relative h-8 flex flex-col justify-end ${isWeekend ? 'bg-slate-50' : ''}`}>
-                        {subLabel && <span className="absolute top-0 left-0 pl-1 text-xs font-bold text-blue-600 whitespace-nowrap z-10">{subLabel}</span>}
-                        <span className={`${subLabel ? 'font-bold text-slate-800' : 'text-slate-400'}`}>{label}</span>
-                    </div>
-                );
+            {allMonths.map((date, i) => {
+                const monthName = date.toLocaleString('default', { month: 'short' });
+                const year = date.getFullYear().toString().slice(2);
+                return <div key={i} className="text-xs text-center text-slate-400">{date.getMonth()===0 && <span className="block text-[10px] text-blue-500">'{year}</span>}{monthName}</div>;
             })}
             </div>
             <div className="space-y-3 relative min-h-[100px]">
                 <div className="absolute inset-0 grid gap-0 h-full pointer-events-none" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
-                    {allColumns.map((date, i) => {
-                         const isWeekend = scale === 'daily' && (date.getDay() === 0 || date.getDay() === 6);
-                         return <div key={i} className={`border-r border-slate-50 h-full ${isWeekend ? 'bg-slate-50/50' : ''}`}></div>
-                    })}
+                    {allMonths.map((_, i) => <div key={i} className="border-r border-slate-50 h-full"></div>)}
                 </div>
                 {sortedItems.map((item, idx) => {
                     const actStart = new Date(item.startDate); const actEnd = new Date(item.endDate); 
-                    let startCol, duration;
-                    if (scale === 'daily') { startCol = getPos(rangeStart, actStart) + 1; duration = Math.max(getPos(actStart, actEnd) + 1, 1); } 
-                    else { startCol = getPos(rangeStart, actStart) + 1; duration = Math.max(getPos(actStart, actEnd) + 1, 1); }
+                    const startCol = getMonthDiff(rangeStart, actStart) + 1;
+                    const duration = Math.max(getMonthDiff(actStart, actEnd) + 1, 1);
                     
-                    let bg = {}, bdr = '', txt = '';
-                    if (item.types?.includes('Project')) { bg={background:'#2563eb'}; bdr='#1d4ed8'; txt='#fff'; }
+                    let backgroundStyle = {}; let borderColor = ''; let textColor = '';
+                    if (item.types && item.types.includes('Project')) { backgroundStyle = { background: '#2563eb' }; borderColor = '#1d4ed8'; textColor = '#ffffff'; }
                     else { 
                         const colors = item.types?.map(t => getTypeColor(t).bg) || ['#eee'];
                         const stops = colors.map((c, i) => `${c} ${(i/colors.length)*100}% ${((i+1)/colors.length)*100}%`);
-                        bg={background: colors.length > 1 ? `linear-gradient(to bottom, ${stops.join(',')})` : colors[0]}; 
-                        bdr='#94a3b8'; txt='#1e293b';
+                        backgroundStyle = { background: colors.length > 1 ? `linear-gradient(to bottom, ${stops.join(',')})` : colors[0] }; 
+                        borderColor = '#94a3b8'; textColor = '#1e293b'; 
                     }
                     return (
                         <div key={item.id || idx} className="grid gap-0 relative z-10 group" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
                             <div className="h-6 rounded border flex items-center px-2 text-[10px] font-bold truncate shadow-sm transition-all hover:opacity-90 hover:h-8 hover:-mt-1 hover:z-20"
-                                style={{ gridColumnStart: startCol, gridColumnEnd: `span ${duration}`, ...bg, borderColor: bdr, color: txt }} 
-                                title={`${item.title} (${item.startDate} ~ ${item.endDate})`}>
+                                style={{ gridColumnStart: startCol, gridColumnEnd: `span ${duration}`, ...backgroundStyle, borderColor: borderColor, color: textColor }}>
                                 {item.types?.includes('Project') && <Flag size={10} className="mr-1 fill-current" />}{item.title}
                             </div>
                         </div>
@@ -309,9 +270,81 @@ const GanttChart = ({ activities, project }) => {
   );
 };
 
-const CASProjectSection = ({ project, onEdit }) => {
+// [수정] Project Section with Teacher Feedback
+const CASProjectSection = ({ project, onEdit, isTeacherMode, onApprove, onRevoke, onFeedback }) => {
     const displayProject = project || { title: '프로젝트를 계획해보세요!', description: '아직 등록된 프로젝트가 없습니다.', status: 'Planned', startDate: '', endDate: '' };
-    return (<div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 shadow-sm print:border-slate-300 print:bg-white print:p-0 print:shadow-none"><div className="flex justify-between items-start mb-4"><div><h3 className="font-bold text-slate-800 flex items-center gap-2 text-lg"><Flag size={20} className="text-blue-600" /> 나의 CAS 프로젝트 (CAS Project)</h3><p className="text-xs text-blue-600 mt-1 font-medium">필수 요건: 1개월 이상 지속 + 협력 활동</p></div><div className={`px-3 py-1 rounded-full text-xs font-bold border ${displayProject.status === 'Completed' ? 'bg-green-100 text-green-700 border-green-200' : displayProject.status === 'In Progress' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>{displayProject.status === 'Completed' ? '완료됨 (Completed)' : displayProject.status === 'In Progress' ? '진행 중 (In Progress)' : '계획 중 (Planned)'}</div></div><div className="bg-white rounded-xl p-4 border border-blue-100/50 shadow-sm print:border-slate-200"><h4 className="font-bold text-lg text-slate-800 mb-2">{displayProject.title}</h4><p className="text-sm text-slate-600 leading-relaxed mb-4">{displayProject.description}</p><div className="flex flex-wrap gap-3 text-xs font-medium text-slate-500"><div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-100"><Calendar size={14} /> {displayProject.startDate || '미정'} ~ {displayProject.endDate || '미정'}</div><div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-100"><Users size={14} /> {displayProject.isCollaborative ? '협력 활동 (Collaborative)' : '개인 활동 (Individual)'}</div></div></div><button onClick={onEdit} className="mt-3 text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 print:hidden"><PenTool size={14} /> 프로젝트 수정 (Edit Project)</button></div>);
+    const [open, setOpen] = useState(false);
+    const [fb, setFb] = useState('');
+
+    useEffect(() => {
+        if(project?.feedback) setFb(project.feedback);
+    }, [project?.feedback]);
+
+    const handleSaveFeedback = () => { onFeedback(fb); setOpen(false); };
+
+    return (
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 shadow-sm print:border-slate-300 print:bg-white print:p-0 print:shadow-none">
+            <div className="flex justify-between items-start mb-4">
+                <div>
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2 text-lg">
+                        <Flag size={20} className="text-blue-600" /> 나의 CAS 프로젝트 (CAS Project)
+                    </h3>
+                    <p className="text-xs text-blue-600 mt-1 font-medium">필수 요건: 1개월 이상 지속 + 협력 활동</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className={`px-3 py-1 rounded-full text-xs font-bold border ${displayProject.status === 'Completed' ? 'bg-green-100 text-green-700 border-green-200' : displayProject.status === 'In Progress' ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                        {displayProject.status === 'Completed' ? '완료됨' : displayProject.status === 'In Progress' ? '진행 중' : '계획 중'}
+                    </div>
+                    {/* 프로젝트 승인 상태 표시 */}
+                    <span className={`inline-block px-2 py-1 rounded text-xs font-bold border ${displayProject.approvalStatus==='Approved'?'bg-green-100 text-green-600 border-green-200':'bg-orange-100 text-orange-600 border-orange-200'}`}>
+                        {displayProject.approvalStatus==='Approved'?'승인됨 (Approved)':'검토 중 (Pending)'}
+                    </span>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-4 border border-blue-100/50 shadow-sm print:border-slate-200 mb-4">
+                <h4 className="font-bold text-lg text-slate-800 mb-2">{displayProject.title}</h4>
+                <p className="text-sm text-slate-600 leading-relaxed mb-4">{displayProject.description}</p>
+                <div className="flex flex-wrap gap-3 text-xs font-medium text-slate-500">
+                    <span className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-100"><Calendar size={14} /> {displayProject.startDate || '미정'} ~ {displayProject.endDate || '미정'}</span>
+                    <span className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-100"><Users size={14} /> {displayProject.isCollaborative ? '협력 활동' : '개인 활동'}</span>
+                </div>
+            </div>
+
+            {/* Project Feedback Display */}
+            {displayProject.feedback && !open && <div className="bg-yellow-50 p-3 rounded-xl text-sm text-yellow-800 font-medium border border-yellow-200 mb-2"><span className="block text-xs font-bold mb-1">👨‍🏫 선생님 피드백 (Teacher Feedback)</span>{displayProject.feedback}</div>}
+
+            {/* Controls */}
+            <div className="flex justify-end gap-2 print:hidden">
+                {!isTeacherMode && (
+                    <button onClick={onEdit} className="text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                        <PenTool size={14} /> 프로젝트 수정
+                    </button>
+                )}
+                {isTeacherMode && (
+                    <div className="flex gap-2">
+                        <button onClick={()=>setOpen(!open)} className="text-blue-600 text-sm font-bold flex items-center gap-1"><MessageSquarePlus size={16}/> 피드백</button>
+                        {displayProject.approvalStatus !== 'Approved' ? (
+                            <button onClick={onApprove} className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-green-600 transition-colors"><ThumbsUp size={14}/> 승인</button>
+                        ) : (
+                            <button onClick={onRevoke} className="bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-600 transition-colors"><RotateCcw size={14}/> 승인 취소</button>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Feedback Input (Teacher Only) */}
+            {open && isTeacherMode && (
+                <div className="mt-2 bg-blue-50 p-3 rounded-xl">
+                    <textarea className="w-full p-2 border rounded mb-2 text-sm h-20" placeholder="프로젝트 피드백을 입력하세요..." value={fb} onChange={e=>setFb(e.target.value)}/>
+                    <div className="flex justify-end gap-2">
+                        <button onClick={()=>setOpen(false)} className="text-slate-500 text-xs font-bold">취소</button>
+                        <button onClick={handleSaveFeedback} className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold">저장</button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 };
 
 const EditProjectModal = ({ project, onClose, onSave }) => {
@@ -379,7 +412,6 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onRevoke, onFeedback
                     {activity.types?.map(type => { const colors = getTypeColor(type); return <span key={type} className={`inline-block px-2 py-1 rounded text-xs font-bold border ${colors.label}`}>{type === 'Creativity' ? '창의 (C)' : type === 'Activity' ? '활동 (A)' : '봉사 (S)'}</span> })}
                     <span className={`inline-block px-2 py-1 rounded text-xs font-bold border ${activity.status==='Approved'?'bg-green-100 text-green-600 border-green-200':'bg-orange-100 text-orange-600 border-orange-200'}`}>{activity.status==='Approved'?'승인됨 (Approved)':'검토 중 (Pending)'}</span>
                 </div>
-                {/* Delete Button Added Here */}
                 <button onClick={() => onDelete(activity.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 self-start" title="활동 삭제"><Trash2 size={16} /></button>
             </div>
             <h3 className="font-bold text-lg mb-1">{activity.title}</h3>
@@ -407,7 +439,6 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onRevoke, onFeedback
             {isTeacherMode && (
                 <div className="flex gap-2 mt-3 justify-end border-t pt-3">
                     <button onClick={()=>setOpen(!open)} className="text-blue-600 text-sm font-bold flex items-center gap-1"><MessageSquarePlus size={16}/> 피드백</button>
-                    
                     {activity.status === 'Pending' ? (
                         <button onClick={()=>onApprove(activity.id)} className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-green-600 transition-colors"><ThumbsUp size={14}/> 승인</button>
                     ) : (
@@ -417,9 +448,7 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onRevoke, onFeedback
             )}
             {open && (
                 <div className="mt-2 bg-blue-50 p-3 rounded-xl">
-                    <div className="text-xs text-blue-800 mb-2 p-2 bg-blue-100 rounded opacity-70">
-                        💡 <strong>피드백 팁:</strong> 1. 칭찬 2. 질문 3. 제안
-                    </div>
+                    <div className="text-xs text-blue-800 mb-2 p-2 bg-blue-100 rounded opacity-70">💡 <strong>피드백 팁:</strong> 1. 칭찬 2. 질문 3. 제안</div>
                     <textarea className="w-full p-2 border rounded mb-2 text-sm h-20" placeholder="학생에게 줄 피드백을 입력하세요..." value={fb} onChange={e=>setFb(e.target.value)}/>
                     <div className="flex justify-end gap-2">
                         <button onClick={()=>setOpen(false)} className="text-slate-500 text-xs font-bold">취소</button>
@@ -442,7 +471,7 @@ const App = () => {
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loginError, setLoginError] = useState(null);
-  const [selectedStudent, setSelectedStudent] = useState('all');
+  const [selectedStudent, setSelectedStudent] = useState(null); // Changed default to null for dropdown
 
   useEffect(() => {
     if (!auth) { setLoading(false); return; }
@@ -460,15 +489,31 @@ const App = () => {
       } catch(e) { setLoginError(e.message); }
   };
 
-  const handleLogout = async () => { if(auth) await signOut(auth); setRole(null); setSelectedStudent('all'); };
+  const handleLogout = async () => { if(auth) await signOut(auth); setRole(null); setSelectedStudent(null); };
 
   useEffect(() => {
     if (!user || !db || !appId) return;
+    
+    // 1. Activities Fetch
     const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'activities'));
     const unsub1 = onSnapshot(q, (s) => setActivities(s.docs.map(d => ({ ...d.data(), id: d.id }))));
-    const unsub2 = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${user.uid}`), (d) => { if(d.exists()) setProject(d.data()); });
+    
+    // 2. Project Fetch - Dynamic path based on role/selection
+    const targetStudentId = role === 'student' ? user.uid : selectedStudent;
+    
+    let unsub2 = () => {};
+    if (targetStudentId) {
+        const projectRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${targetStudentId}`);
+        unsub2 = onSnapshot(projectRef, (doc) => {
+            if(doc.exists()) setProject(doc.data());
+            else setProject(null); // Reset if no project found for selected student
+        });
+    } else {
+        setProject(null); // Clear project when no student selected in teacher mode
+    }
+
     return () => { unsub1(); unsub2(); };
-  }, [user, role]);
+  }, [user, role, selectedStudent]);
 
   const handleAddActivity = async (newActivity) => {
       if (!user || !db) return;
@@ -512,15 +557,42 @@ const App = () => {
 
   const handleSaveProject = async (updatedProject) => {
       if (!db || !user) return;
-      try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${user.uid}`), updatedProject); } 
+      // Teacher edits save to the selected student's project, Student saves to their own.
+      const targetUid = role === 'student' ? user.uid : selectedStudent;
+      if (!targetUid) return;
+
+      try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${targetUid}`), updatedProject); } 
       catch (e) { console.error("Error:", e); }
+  };
+
+  // Teacher Project Handlers
+  const handleProjectApprove = async () => {
+      if (!db || !selectedStudent) return;
+      // We assume project exists if we are here. We update specific fields.
+      // Since `setDoc` with merge is not used above for simplicity in full object saves, 
+      // here for status update `updateDoc` is better, BUT `project` is a single doc.
+      // We need to refer to the same doc path.
+      const projectRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${selectedStudent}`);
+      try { await updateDoc(projectRef, { approvalStatus: 'Approved' }); } catch(e) { alert("Error approving project: " + e.message); }
+  };
+
+  const handleProjectRevoke = async () => {
+      if (!db || !selectedStudent) return;
+      const projectRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${selectedStudent}`);
+      try { await updateDoc(projectRef, { approvalStatus: 'Pending' }); } catch(e) { alert("Error revoking project: " + e.message); }
+  };
+
+  const handleProjectFeedback = async (text) => {
+       if (!db || !selectedStudent) return;
+       const projectRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${selectedStudent}`);
+       try { await updateDoc(projectRef, { feedback: text }); } catch(e) { alert("Error saving feedback: " + e.message); }
   };
 
   // --- CSV Export Logic ---
   const handleExportCSV = () => {
       const myActivities = role === 'student' 
           ? activities.filter(a => a.studentId === user.uid)
-          : (selectedStudent === 'all' ? activities : activities.filter(a => a.studentId === selectedStudent));
+          : (selectedStudent ? activities.filter(a => a.studentId === selectedStudent) : []);
 
       if (myActivities.length === 0) { alert("내보낼 활동이 없습니다."); return; }
 
@@ -552,7 +624,7 @@ const App = () => {
 
   const myActivities = role === 'student' 
       ? activities.filter(a => a.studentId === user.uid)
-      : (selectedStudent === 'all' ? activities : activities.filter(a => a.studentId === selectedStudent));
+      : (selectedStudent ? activities.filter(a => a.studentId === selectedStudent) : []);
 
   const studentList = role === 'teacher' ? Array.from(new Map(activities.map(a => [a.studentId, a.studentName])).entries()).map(([id, name]) => ({id, name})) : [];
   const achievedOutcomes = new Set(myActivities.flatMap(a => a.outcomes || [])).size;
@@ -583,34 +655,65 @@ const App = () => {
         {role === 'teacher' && (
             <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                 <div className="flex items-center gap-2 mb-3 text-sm font-bold text-slate-700"><Filter size={16} /> 학생별 모아보기</div>
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                    <button onClick={() => setSelectedStudent('all')} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap ${selectedStudent === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}>전체 보기</button>
-                    {studentList.map(s => (<button key={s.id} onClick={() => setSelectedStudent(s.id)} className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap ${selectedStudent === s.id ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600'}`}>{s.name}</button>))}
+                <div className="relative">
+                    <select 
+                        className="w-full p-3 pl-4 pr-10 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-700"
+                        value={selectedStudent || ''}
+                        onChange={(e) => setSelectedStudent(e.target.value || null)}
+                    >
+                        <option value="" disabled>학생을 선택해주세요 (Select Student)</option>
+                        {studentList.map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
+                        <ChevronRight size={16} className="rotate-90" />
+                    </div>
                 </div>
             </div>
         )}
         
-        <LearningOutcomesProgress achievedSet={achievedSet} userEmail={user.email} />
+        {/* 교사 모드에서 학생 미선택 시 안내 메시지 표시 */}
+        {role === 'teacher' && !selectedStudent ? (
+            <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                <Users size={48} className="mx-auto text-slate-300 mb-4" />
+                <h3 className="text-xl font-bold text-slate-400">학생을 선택해주세요</h3>
+                <p className="text-sm text-slate-400">상단 드롭다운에서 학생을 선택하면<br/>활동 내역과 프로젝트를 볼 수 있습니다.</p>
+            </div>
+        ) : (
+            <>
+                <LearningOutcomesProgress achievedSet={achievedSet} userEmail={role === 'student' ? user.email : (studentList.find(s => s.id === selectedStudent)?.name || 'Student')} />
 
-        <section>
-            <div className="flex items-center justify-between mb-2"><h2 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Target size={20} className="text-blue-500"/> 진척도 (Progress)</h2><span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-full flex items-center gap-1 border border-slate-200"><Clock size={12}/> Total: {totalHours}h</span></div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <ProgressBar label="창의 (Creativity)" current={stats.c} colorClass="bg-purple-500 text-purple-500" icon={PenTool}/>
-                <ProgressBar label="활동 (Activity)" current={stats.a} colorClass="bg-yellow-500 text-yellow-500" icon={Zap}/>
-                <ProgressBar label="봉사 (Service)" current={stats.s} colorClass="bg-red-500 text-red-500" icon={Heart}/>
-            </div>
-        </section>
-        
-        {role === 'student' && <CASProjectSection project={project} onEdit={() => setShowProjectModal(true)} />}
-        <GanttChart activities={myActivities} project={role === 'student' ? project : null} />
-        
-        <section>
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">{role === 'student' ? <><Smile size={20} className="text-orange-500"/> 최근 활동</> : <><Users size={20} className="text-orange-500"/> {selectedStudent === 'all' ? '전체 활동' : '학생 활동'}</>}</h2>
-                {role==='student' && <button onClick={()=>setShowModal(true)} className="bg-blue-600 text-white px-4 py-2 rounded-xl flex items-center gap-1 font-bold shadow-md hover:bg-blue-700 transition-all"><Plus size={18}/> 활동 추가</button>}
-            </div>
-            {myActivities.length > 0 ? myActivities.map(a => <ActivityCard key={a.id} activity={a} isTeacherMode={role==='teacher'} onApprove={handleApprove} onRevoke={handleRevoke} onFeedback={handleFeedback} onDelete={handleDeleteActivity} />) : <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-slate-200"><p className="text-slate-400">표시할 활동이 없습니다.</p></div>}
-        </section>
+                <section>
+                    <div className="flex items-center justify-between mb-2"><h2 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Target size={20} className="text-blue-500"/> 진척도 (Progress)</h2><span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-full flex items-center gap-1 border border-slate-200"><Clock size={12}/> Total: {totalHours}h</span></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <ProgressBar label="창의 (Creativity)" current={stats.c} colorClass="bg-purple-500 text-purple-500" icon={PenTool}/>
+                        <ProgressBar label="활동 (Activity)" current={stats.a} colorClass="bg-yellow-500 text-yellow-500" icon={Zap}/>
+                        <ProgressBar label="봉사 (Service)" current={stats.s} colorClass="bg-red-500 text-red-500" icon={Heart}/>
+                    </div>
+                </section>
+                
+                {/* [수정] 교사도 프로젝트 섹션 볼 수 있음 (단, 학생 선택 시) */}
+                <CASProjectSection 
+                    project={project} 
+                    onEdit={() => setShowProjectModal(true)} 
+                    isTeacherMode={role === 'teacher'}
+                    onApprove={handleProjectApprove}
+                    onRevoke={handleProjectRevoke}
+                    onFeedback={handleProjectFeedback}
+                />
+                
+                <GanttChart activities={myActivities} project={project} />
+                
+                <section>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">{role === 'student' ? <><Smile size={20} className="text-orange-500"/> 최근 활동</> : <><Users size={20} className="text-orange-500"/> {selectedStudent ? '학생 활동 기록' : '전체 활동'}</>}</h2>
+                        {role==='student' && <button onClick={()=>setShowModal(true)} className="bg-blue-600 text-white px-4 py-2 rounded-xl flex items-center gap-1 font-bold shadow-md hover:bg-blue-700 transition-all"><Plus size={18}/> 활동 추가</button>}
+                    </div>
+                    {myActivities.length > 0 ? myActivities.map(a => <ActivityCard key={a.id} activity={a} isTeacherMode={role==='teacher'} onApprove={handleApprove} onRevoke={handleRevoke} onFeedback={handleFeedback} onDelete={handleDeleteActivity} />) : <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-slate-200"><p className="text-slate-400">표시할 활동이 없습니다.</p></div>}
+                </section>
+            </>
+        )}
       </main>
       
       {role === 'student' && <button onClick={() => setShowModal(true)} className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-xl shadow-blue-300 flex items-center justify-center transition-transform hover:scale-110 active:scale-95 print:hidden z-40" title="활동 추가"><Plus size={28} /></button>}
