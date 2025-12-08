@@ -3,7 +3,7 @@ import {
   Heart, Zap, PenTool, Plus, Calendar, CheckCircle, Target, Smile, 
   Camera, X, ChevronRight, Trophy, MoreHorizontal, Printer, User, 
   Users, MessageSquare, ThumbsUp, Clock, Layout, Flag, Link, 
-  FileText, Mic, Save, MessageSquarePlus, Edit3, LogOut, Loader, ShieldCheck, Lock, AlertTriangle, Filter, Info, ExternalLink, Grid, Trash2, RotateCcw
+  FileText, Mic, Save, MessageSquarePlus, Edit3, LogOut, Loader, ShieldCheck, Lock, AlertTriangle, Filter, Info, ExternalLink, Grid, Trash2, RotateCcw, FileSpreadsheet
 } from 'lucide-react';
 
 // --- Firebase Imports ---
@@ -29,9 +29,11 @@ import {
 
 // =================================================================
 // 🔴 [설정 1] Firebase 키 (본인 것으로 교체 필수!)
+// [참고] 배포 시 보안을 위해 환경 변수(import.meta.env)를 사용하는 것이 좋으나,
+// 현재 미리보기 환경 호환성을 위해 직접 입력 방식으로 복구했습니다.
 // =================================================================
 const myFirebaseConfig = {
-  apiKey: "AIzaSyDIQ-z006mRAFCIWikmp7JzrOB9qjHrxPw",
+  apiKey: "AIzaSyBEVbZo21kLIZLMbBwlM9bclJ0qXQzupv8",
   authDomain: "cas-journey-3a3c6.firebaseapp.com",
   projectId: "cas-journey-3a3c6",
   storageBucket: "cas-journey-3a3c6.firebasestorage.app",
@@ -45,19 +47,20 @@ const myFirebaseConfig = {
 const TEACHER_WHITELIST = [
   "teacher1@gmail.com",
   "gassak3914@gmail.com",
-  "entheos210@gmail.com" // 본인 이메일
+  "entheos210@gmail.com" // 본인 이메일 (테스트용)
 ];
 
 const STUDENT_WHITELIST = [
   "student1@gmail.com",
   "gassak3914@gmail.com",
-  "entheos210@gmail.com" // 본인 이메일
+  "entheos210@gmail.com" // 본인 이메일 (테스트용)
 ];
 // =================================================================
 
 let auth, db, appId;
 
 try {
+  // Config 우선순위: 1. 코드 상단 직접 입력 -> 2. 미리보기 환경 변수(__firebase_config)
   const configToUse = myFirebaseConfig.apiKey !== "YOUR_API_KEY_HERE" 
     ? myFirebaseConfig 
     : (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null);
@@ -68,7 +71,7 @@ try {
     db = getFirestore(app);
     appId = configToUse.projectId || 'cas-app';
   } else {
-    console.warn("Firebase Config Missing");
+    console.warn("Firebase Config Missing. Please update myFirebaseConfig.");
   }
 } catch (e) {
   console.error("Init Error:", e);
@@ -101,25 +104,20 @@ const LoginView = ({ onLogin, errorMsg }) => {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white max-w-md w-full rounded-3xl shadow-xl p-8 text-center">
         
-        {/* [수정] 학교 로고 영역 (이미지 로딩 실패 방지 추가) */}
         <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-            {/* [로고 넣는 법]
-                1. 'public' 폴더에 이미지 파일(예: logo.png)을 넣으세요.
-                2. 아래 src="/logo.png" 처럼 파일명 앞에 '/'를 붙여 수정하세요.
-            */}
             <img 
-                src="/logo.png" // <--- 여기에 파일명 입력 (예: "/school_logo.png")
+                src="/logo.png" 
                 alt="School Logo" 
                 onError={(e) => {
                     e.target.onerror = null; 
-                    e.target.src = "https://drive.google.com/file/d/19OvpTJZX-O5349KN5sgKGeQgNLfg2D9c/view?usp=sharing"; // 로딩 실패시 기본 이미지
+                    e.target.src = "https://placehold.co/200x200/2563eb/ffffff?text=School"; 
                 }}
                 className="w-full h-full object-contain rounded-full shadow-lg shadow-blue-100 bg-white p-1"
             />
         </div>
 
         <h1 className="text-3xl font-black text-slate-800 mb-2">봉황IB CAS</h1>
-        <p className="text-slate-500 mb-8">학생의 성장을 기록하고 공유하는<br/>가장 스마트한 방법</p>
+        <p className="text-slate-500 mb-8">학생의 성장을 기록하고 공유하는<br/>배움과 베풂이 공존하는</p>
         
         {errorMsg && (
             <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm mb-6 flex items-start gap-2 text-left animate-pulse">
@@ -147,8 +145,6 @@ const LoginView = ({ onLogin, errorMsg }) => {
   );
 };
 
-// LO Visual Progress Component
-// [수정 2] 우측 상단 이메일 표시 추가
 const LearningOutcomesProgress = ({ achievedSet, userEmail }) => {
   return (
     <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
@@ -156,7 +152,6 @@ const LearningOutcomesProgress = ({ achievedSet, userEmail }) => {
           <h3 className="font-bold text-slate-800 flex items-center gap-2">
             <Target size={18} className="text-blue-500"/> 학습 성과 달성 현황 (Learning Outcomes)
           </h3>
-          {/* User Email Badge */}
           <div className="flex items-center gap-1 text-xs font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded-full">
               <User size={12} />
               {userEmail}
@@ -200,7 +195,7 @@ const ProgressBar = ({ label, current, colorClass, icon: Icon }) => {
 };
 
 const GanttChart = ({ activities, project }) => {
-  const [scale, setScale] = useState('monthly'); // 'daily' or 'monthly'
+  const [scale, setScale] = useState('monthly'); 
 
   const projectItem = project && project.title ? { id: 'project-main', title: `[프로젝트] ${project.title}`, startDate: project.startDate, endDate: project.endDate, types: ['Project'], isProject: true } : null;
   const allItems = [...activities]; if (projectItem) allItems.push(projectItem);
@@ -374,57 +369,19 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onRevoke, onFeedback
 
     return (
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-4">
-            {/* 상단 헤더 영역 [수정 1: 상태/삭제 버튼 우측 이동] */}
-            <div className="flex justify-between items-start mb-3">
-                {/* 왼쪽: 활동 유형 태그들 */}
-                <div className="flex gap-2 flex-wrap">
-                    {activity.types?.map(type => { 
-                        const colors = getTypeColor(type); 
-                        return (
-                            <span key={type} className={`inline-block px-2 py-1 rounded text-xs font-bold border ${colors.label}`}>
-                                {type === 'Creativity' ? '창의 (C)' : type === 'Activity' ? '활동 (A)' : '봉사 (S)'}
-                            </span> 
-                        );
-                    })}
+            <div className="flex justify-between mb-2">
+                <div className="flex gap-2 mb-2 flex-wrap">
+                    {activity.types?.map(type => { const colors = getTypeColor(type); return <span key={type} className={`inline-block px-2 py-1 rounded text-xs font-bold border ${colors.label}`}>{type === 'Creativity' ? '창의 (C)' : type === 'Activity' ? '활동 (A)' : '봉사 (S)'}</span> })}
                 </div>
-
-                {/* 오른쪽: 상태 태그 + 삭제 버튼 */}
                 <div className="flex items-center gap-2">
-                    <span className={`inline-block px-2 py-1 rounded text-xs font-bold border ${activity.status==='Approved'?'bg-green-100 text-green-600 border-green-200':'bg-orange-100 text-orange-600 border-orange-200'}`}>
-                        {activity.status==='Approved'?'승인됨 (Approved)':'검토 중 (Pending)'}
-                    </span>
-                    {/* 삭제 버튼 */}
-                    <button onClick={() => onDelete(activity.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50" title="활동 삭제">
-                        <Trash2 size={16} />
-                    </button>
+                    <span className={`inline-block px-2 py-1 rounded text-xs font-bold border ${activity.status==='Approved'?'bg-green-100 text-green-600 border-green-200':'bg-orange-100 text-orange-600 border-orange-200'}`}>{activity.status==='Approved'?'승인됨 (Approved)':'검토 중 (Pending)'}</span>
+                    <button onClick={() => onDelete(activity.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50" title="활동 삭제"><Trash2 size={16} /></button>
                 </div>
             </div>
-
-            {/* 내용 영역 */}
-            <div className="mb-3">
-                <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-lg text-slate-800">{activity.title}</h3>
-                    {isTeacherMode && <span className="text-xs text-slate-400 bg-slate-100 px-2 py-0.5 rounded">{activity.studentName}</span>}
-                </div>
-                <div className="flex items-center gap-2 text-slate-400 text-xs mt-1">
-                    <Calendar size={12} /> {activity.startDate} ~ {activity.endDate}
-                    <span>•</span>
-                    <span className="font-medium text-slate-600">{activity.hours} hours</span>
-                </div>
-            </div>
-
+            <h3 className="font-bold text-lg mb-1">{activity.title}</h3>
+            <div className="text-sm text-slate-500 mb-3 flex items-center gap-2"><Calendar size={14}/> {activity.startDate} ~ {activity.endDate} • {activity.hours}h {isTeacherMode && <span className="bg-slate-100 px-2 rounded text-xs ml-2">{activity.studentName}</span>}</div>
             <div className="bg-slate-50 p-3 rounded-xl text-sm italic mb-3 border-l-4 border-blue-200">"{activity.reflection}"</div>
-            
-            <div className="flex flex-wrap gap-2 mb-4">
-                {activity.outcomes && activity.outcomes.map(ocId => { 
-                    const outcome = LEARNING_OUTCOMES.find(lo => lo.id === ocId); 
-                    return (
-                        <span key={ocId} className="text-xs bg-white border px-2 py-1 rounded-full flex items-center gap-1" title={outcome?.text}>
-                            {outcome?.icon} {outcome?.code}
-                        </span> 
-                    );
-                })}
-            </div>
+            <div className="flex flex-wrap gap-2 mb-4">{activity.outcomes && activity.outcomes.map(ocId => { const outcome = LEARNING_OUTCOMES.find(lo => lo.id === ocId); return <span key={ocId} className="text-xs bg-white border px-2 py-1 rounded-full flex items-center gap-1" title={outcome?.text}>{outcome?.icon} {outcome?.code}</span> })}</div>
             
             {/* Evidence Display */}
             {activity.attachments && activity.attachments.length > 0 && (
@@ -446,23 +403,16 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onRevoke, onFeedback
             {isTeacherMode && (
                 <div className="flex gap-2 mt-3 justify-end border-t pt-3">
                     <button onClick={()=>setOpen(!open)} className="text-blue-600 text-sm font-bold flex items-center gap-1"><MessageSquarePlus size={16}/> 피드백</button>
-                    
                     {activity.status === 'Pending' ? (
-                        <button onClick={()=>onApprove(activity.id)} className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-green-600 transition-colors">
-                            <ThumbsUp size={14}/> 승인
-                        </button>
+                        <button onClick={()=>onApprove(activity.id)} className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-green-600 transition-colors"><ThumbsUp size={14}/> 승인</button>
                     ) : (
-                        <button onClick={()=>onRevoke(activity.id)} className="bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-600 transition-colors">
-                            <RotateCcw size={14}/> 승인 취소
-                        </button>
+                        <button onClick={()=>onRevoke(activity.id)} className="bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-600 transition-colors"><RotateCcw size={14}/> 승인 취소</button>
                     )}
                 </div>
             )}
             {open && (
                 <div className="mt-2 bg-blue-50 p-3 rounded-xl">
-                    <div className="text-xs text-blue-800 mb-2 p-2 bg-blue-100 rounded opacity-70">
-                        💡 <strong>피드백 팁:</strong> 1. 칭찬(구체적 노력) 2. 질문(생각 확장) 3. 제안(다음 단계)
-                    </div>
+                    <div className="text-xs text-blue-800 mb-2 p-2 bg-blue-100 rounded opacity-70">💡 <strong>피드백 팁:</strong> 1. 칭찬 2. 질문 3. 제안</div>
                     <textarea className="w-full p-2 border rounded mb-2 text-sm h-20" placeholder="학생에게 줄 피드백을 입력하세요..." value={fb} onChange={e=>setFb(e.target.value)}/>
                     <div className="flex justify-end gap-2">
                         <button onClick={()=>setOpen(false)} className="text-slate-500 text-xs font-bold">취소</button>
@@ -559,6 +509,37 @@ const App = () => {
       catch (e) { console.error("Error:", e); }
   };
 
+  // --- CSV Export Logic ---
+  const handleExportCSV = () => {
+      const myActivities = role === 'student' 
+          ? activities.filter(a => a.studentId === user.uid)
+          : (selectedStudent === 'all' ? activities : activities.filter(a => a.studentId === selectedStudent));
+
+      if (myActivities.length === 0) { alert("내보낼 활동이 없습니다."); return; }
+
+      const headers = ['활동 제목', '종류', '시간', '시작일', '종료일', '상태', '성찰', '피드백'];
+      const rows = myActivities.map(act => [
+          act.title,
+          act.types ? act.types.join(' & ') : '',
+          act.hours,
+          act.startDate,
+          act.endDate,
+          act.status,
+          `"${(act.reflection || '').replace(/"/g, '""')}"`,
+          `"${(act.feedback || '').replace(/"/g, '""')}"`
+      ]);
+
+      const BOM = '\uFEFF'; // Korean support
+      const csvContent = BOM + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', `CAS_Activities_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  };
+
   if (loading) return <div className="h-screen flex items-center justify-center"><Loader className="animate-spin"/></div>;
   if (!user) return <LoginView onLogin={handleLogin} errorMsg={loginError} />;
 
@@ -585,7 +566,11 @@ const App = () => {
             <div className="flex items-center gap-2"><h1 className="font-black text-xl text-slate-800">나의 CAS 여정</h1><span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${role==='teacher'?'bg-yellow-100 text-yellow-700':'bg-blue-100 text-blue-700'}`}>{role === 'teacher' ? 'Teacher' : 'Student'}</span></div>
             <p className="text-xs text-slate-500">{role === 'student' ? '활동을 기록하고 성장하세요.' : '학생들의 활동을 검토하세요.'}</p>
           </div>
-          <button onClick={handleLogout} className="text-slate-400 hover:text-red-500 p-2"><LogOut size={20}/></button>
+          <div className="flex items-center gap-1">
+            <button onClick={handleExportCSV} className="text-slate-400 hover:text-green-600 p-2 print:hidden" title="엑셀로 내보내기"><FileSpreadsheet size={20}/></button>
+            <button onClick={() => window.print()} className="text-slate-400 hover:text-blue-600 p-2 print:hidden" title="출력"><Printer size={20}/></button>
+            <button onClick={handleLogout} className="text-slate-400 hover:text-red-500 p-2 print:hidden" title="로그아웃"><LogOut size={20}/></button>
+          </div>
       </div>
       <main className="max-w-3xl mx-auto p-4 space-y-6">
         {role === 'teacher' && (
@@ -598,12 +583,11 @@ const App = () => {
             </div>
         )}
         
-        {/* [수정 2 적용] User Email 전달 */}
         <LearningOutcomesProgress achievedSet={achievedSet} userEmail={user.email} />
 
         <section>
             <div className="flex items-center justify-between mb-2"><h2 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Target size={20} className="text-blue-500"/> 진척도 (Progress)</h2><span className="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-full flex items-center gap-1 border border-slate-200"><Clock size={12}/> Total: {totalHours}h</span></div>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <ProgressBar label="창의 (Creativity)" current={stats.c} colorClass="bg-purple-500 text-purple-500" icon={PenTool}/>
                 <ProgressBar label="활동 (Activity)" current={stats.a} colorClass="bg-yellow-500 text-yellow-500" icon={Zap}/>
                 <ProgressBar label="봉사 (Service)" current={stats.s} colorClass="bg-red-500 text-red-500" icon={Heart}/>
