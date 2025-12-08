@@ -46,13 +46,13 @@ const myFirebaseConfig = {
 // =================================================================
 const TEACHER_WHITELIST = [
   "teacher1@gmail.com",
-  "principal@school.edu",
+  "gassak3914@gmail.com",
   "entheos210@gmail.com" // 본인 이메일 (테스트용)
 ];
 
 const STUDENT_WHITELIST = [
   "student1@gmail.com",
-  "kim.student@school.edu",
+  "gassak3914@gmail.com",
   "entheos210@gmail.com" // 본인 이메일 (테스트용)
 ];
 // =================================================================
@@ -121,8 +121,8 @@ const LoginView = ({ onLogin, errorMsg }) => {
             />
         </div>
 
-        <h1 className="text-3xl font-black text-slate-800 mb-2">OpenBac CAS</h1>
-        <p className="text-slate-500 mb-8">학생의 성장을 기록하고 공유하는<br/>가장 스마트한 방법</p>
+        <h1 className="text-3xl font-black text-slate-800 mb-2">봉황IB CAS</h1>
+        <p className="text-slate-500 mb-8">학생의 성장을 기록하고 공유하는<br/>배움과 베풂이 공존하는</p>
         
         {errorMsg && (
             <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm mb-6 flex items-start gap-2 text-left animate-pulse">
