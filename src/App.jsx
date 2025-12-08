@@ -28,7 +28,8 @@ import {
 } from 'firebase/firestore';
 
 // =================================================================
-// 🔴 [설정 1] Firebase 키 설정
+// 🔴 [설정 1] Firebase 키 (본인 것으로 교체 필수!)
+// [수정] import.meta 오류 방지를 위해 직접 입력 방식으로 복구했습니다.
 // =================================================================
 const myFirebaseConfig = {
   apiKey: "AIzaSyA0cmpCyiVuUVeBwpID0HDKKKEd7xngP7U",
@@ -36,7 +37,7 @@ const myFirebaseConfig = {
   projectId: "cas-journey-3a3c6",
   storageBucket: "cas-journey-3a3c6.firebasestorage.app",
   messagingSenderId: "510320677268",
-  appId: "1:510320677268:web:410c69b1d6e90a7cd33f81"
+  appId: "Y1:510320677268:web:410c69b1d6e90a7cd33f81"
 };
 
 // =================================================================
@@ -58,6 +59,7 @@ const STUDENT_WHITELIST = [
 let auth, db, appId;
 
 try {
+  // Config 우선순위: 1. 코드 상단 직접 입력 -> 2. 미리보기 환경 변수(__firebase_config)
   const configToUse = myFirebaseConfig.apiKey !== "YOUR_API_KEY_HERE" 
     ? myFirebaseConfig 
     : (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null);
@@ -68,10 +70,10 @@ try {
     db = getFirestore(app);
     appId = configToUse.projectId || 'cas-app';
   } else {
-    console.warn("Firebase Config Missing");
+    console.warn("⚠️ Firebase Config가 없습니다. 코드를 확인해주세요.");
   }
 } catch (e) {
-  console.error("Init Error:", e);
+  console.error("❌ Firebase 초기화 에러:", e);
 }
 
 // --- Constants ---
@@ -104,12 +106,15 @@ const LoginView = ({ onLogin, errorMsg }) => {
             <img 
                 src="/logo.png" 
                 alt="School Logo" 
-                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/200x200/2563eb/ffffff?text=School"; }}
+                onError={(e) => {
+                    e.target.onerror = null; 
+                    e.target.src = "https://placehold.co/200x200/2563eb/ffffff?text=School"; 
+                }}
                 className="w-full h-full object-contain rounded-full shadow-lg shadow-blue-100 bg-white p-1"
             />
         </div>
         <h1 className="text-3xl font-black text-slate-800 mb-2">봉황IB CAS</h1>
-        <p className="text-slate-500 mb-8">배품과 베풂이 공존하는<br/>지역과 인류 공동체 조성에 기여</p>
+        <p className="text-slate-500 mb-8">학생의 성장을 기록하고 공유하는<br/>배움과 베풂이 공존하는</p>
         
         {errorMsg && (
             <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm mb-6 flex items-start gap-2 text-left animate-pulse">
@@ -120,14 +125,17 @@ const LoginView = ({ onLogin, errorMsg }) => {
 
         <div className="space-y-3">
           <button onClick={() => onLogin('student')} className="w-full py-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-bold transition-all shadow-sm flex items-center justify-center gap-3">
+            <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)"><path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z"/><path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z"/><path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C -21.864 50.439 -21.724 49.669 -21.484 48.949 L -21.484 45.859 L -25.464 45.859 C -26.284 47.479 -26.754 49.299 -26.754 51.239 C -26.754 53.179 -26.284 54.999 -25.464 56.619 L -21.484 53.529 Z"/><path fill="#EA4335" d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.799 L -6.734 42.379 C -8.804 40.449 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z"/></g></svg>
             학생 로그인 (Student Login)
           </button>
           <button onClick={() => onLogin('teacher')} className="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold transition-all shadow-md flex items-center justify-center gap-2">
             <ShieldCheck size={20} /> 교사 로그인 (Teacher Login)
           </button>
         </div>
+        
         <div className="mt-8 pt-6 border-t border-slate-100 text-xs text-slate-400">
             <p>🔒 등록된 계정만 접속 가능합니다.</p>
+            <p>접속 문의: 담당 선생님</p>
         </div>
       </div>
     </div>
@@ -183,6 +191,7 @@ const ProgressBar = ({ label, current, colorClass, icon: Icon }) => {
   );
 };
 
+// [수정된 GanttChart] - 픽셀 기반 너비 고정으로 찌그러짐 해결
 const GanttChart = ({ activities, project }) => {
   const [scale, setScale] = useState('monthly'); 
 
@@ -200,21 +209,27 @@ const GanttChart = ({ activities, project }) => {
   const minDate = new Date(Math.min(...startDates)); 
   const maxDate = new Date(Math.max(...endDates));
   
-  const rangeStart = new Date(minDate.getFullYear(), minDate.getMonth() - 1, 1);
-  const rangeEnd = new Date(maxDate.getFullYear(), maxDate.getMonth() + 2, 0);
+  // [수정] 월간 너비 확대 (100px)
+  const columnWidth = scale === 'daily' ? 30 : 100; 
+  let rangeStart, rangeEnd, allColumns, getPos;
 
-  const allMonths = [];
-  const curr = new Date(rangeStart);
-  let safety = 0;
-  while (curr <= rangeEnd && safety < 60) {
-    allMonths.push(new Date(curr));
-    curr.setMonth(curr.getMonth() + 1);
-    safety++;
+  if (scale === 'daily') {
+      rangeStart = new Date(minDate); rangeStart.setDate(rangeStart.getDate() - 2);
+      rangeEnd = new Date(maxDate); rangeEnd.setDate(rangeEnd.getDate() + 2);
+      allColumns = []; let curr = new Date(rangeStart); let safety = 0;
+      while (curr <= rangeEnd && safety < 730) { allColumns.push(new Date(curr)); curr.setDate(curr.getDate() + 1); safety++; }
+      getPos = (d1, d2) => Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+  } else {
+      rangeStart = new Date(minDate.getFullYear(), minDate.getMonth() - 1, 1);
+      rangeEnd = new Date(maxDate.getFullYear(), maxDate.getMonth() + 2, 0);
+      allColumns = []; let curr = new Date(rangeStart); let safety = 0;
+      while (curr <= rangeEnd && safety < 60) { allColumns.push(new Date(curr)); curr.setMonth(curr.getMonth() + 1); safety++; }
+      getPos = (d1, d2) => (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
   }
-
-  const getMonthDiff = (d1, d2) => (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth());
-  const totalColumns = allMonths.length;
-  const columnWidth = scale === 'daily' ? 30 : 60;
+  
+  const totalColumns = allColumns.length;
+  // [수정] 컨테이너 너비 고정 (스크롤 발생 유도)
+  const containerWidth = totalColumns * columnWidth;
 
   return (
     <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 overflow-hidden print:border-slate-300">
@@ -229,35 +244,55 @@ const GanttChart = ({ activities, project }) => {
         </div>
       </div>
       <div className="overflow-x-auto pb-2">
-        <div className="min-w-max"> 
+        <div style={{ width: `${containerWidth}px` }}> 
             <div className="grid gap-0 mb-2 border-b border-slate-100 pb-2" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
-            {allMonths.map((date, i) => {
-                const monthName = date.toLocaleString('default', { month: 'short' });
-                const year = date.getFullYear().toString().slice(2);
-                return <div key={i} className="text-xs text-center text-slate-400">{date.getMonth()===0 && <span className="block text-[10px] text-blue-500">'{year}</span>}{monthName}</div>;
+            {allColumns.map((date, i) => {
+                let label = '', subLabel = '';
+                if (scale === 'daily') {
+                    const day = date.getDate(); const month = date.getMonth() + 1;
+                    const isFirstDay = day === 1 || i === 0;
+                    label = day; if (isFirstDay) subLabel = `${month}월`;
+                } else {
+                    const monthName = date.toLocaleString('default', { month: 'short' });
+                    const year = date.getFullYear().toString().slice(2);
+                    const isNewYear = date.getMonth() === 0 || i === 0;
+                    label = monthName; if (isNewYear) subLabel = `'${year}`;
+                }
+                const isWeekend = scale === 'daily' && (date.getDay() === 0 || date.getDay() === 6);
+                return (
+                    <div key={i} className={`text-[10px] text-center border-l border-transparent relative h-8 flex flex-col justify-end ${isWeekend ? 'bg-slate-50' : ''}`}>
+                        {subLabel && <span className="absolute top-0 left-0 pl-1 text-xs font-bold text-blue-600 whitespace-nowrap z-10">{subLabel}</span>}
+                        <span className={`${subLabel ? 'font-bold text-slate-800' : 'text-slate-400'}`}>{label}</span>
+                    </div>
+                );
             })}
             </div>
             <div className="space-y-3 relative min-h-[100px]">
                 <div className="absolute inset-0 grid gap-0 h-full pointer-events-none" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
-                    {allMonths.map((_, i) => <div key={i} className="border-r border-slate-50 h-full"></div>)}
+                    {allColumns.map((date, i) => {
+                         const isWeekend = scale === 'daily' && (date.getDay() === 0 || date.getDay() === 6);
+                         return <div key={i} className={`border-r border-slate-50 h-full ${isWeekend ? 'bg-slate-50/50' : ''}`}></div>
+                    })}
                 </div>
                 {sortedItems.map((item, idx) => {
                     const actStart = new Date(item.startDate); const actEnd = new Date(item.endDate); 
-                    const startCol = getMonthDiff(rangeStart, actStart) + 1;
-                    const duration = Math.max(getMonthDiff(actStart, actEnd) + 1, 1);
+                    let startCol, duration;
+                    if (scale === 'daily') { startCol = getPos(rangeStart, actStart) + 1; duration = Math.max(getPos(actStart, actEnd) + 1, 1); } 
+                    else { startCol = getPos(rangeStart, actStart) + 1; duration = Math.max(getPos(actStart, actEnd) + 1, 1); }
                     
-                    let backgroundStyle = {}; let borderColor = ''; let textColor = '';
-                    if (item.types && item.types.includes('Project')) { backgroundStyle = { background: '#2563eb' }; borderColor = '#1d4ed8'; textColor = '#ffffff'; }
+                    let bg = {}, bdr = '', txt = '';
+                    if (item.types?.includes('Project')) { bg={background:'#2563eb'}; bdr='#1d4ed8'; txt='#fff'; }
                     else { 
                         const colors = item.types?.map(t => getTypeColor(t).bg) || ['#eee'];
                         const stops = colors.map((c, i) => `${c} ${(i/colors.length)*100}% ${((i+1)/colors.length)*100}%`);
-                        backgroundStyle = { background: colors.length > 1 ? `linear-gradient(to bottom, ${stops.join(',')})` : colors[0] }; 
-                        borderColor = '#94a3b8'; textColor = '#1e293b'; 
+                        bg={background: colors.length > 1 ? `linear-gradient(to bottom, ${stops.join(',')})` : colors[0]}; 
+                        bdr='#94a3b8'; txt='#1e293b';
                     }
                     return (
                         <div key={item.id || idx} className="grid gap-0 relative z-10 group" style={{ gridTemplateColumns: `repeat(${totalColumns}, ${columnWidth}px)` }}>
                             <div className="h-6 rounded border flex items-center px-2 text-[10px] font-bold truncate shadow-sm transition-all hover:opacity-90 hover:h-8 hover:-mt-1 hover:z-20"
-                                style={{ gridColumnStart: startCol, gridColumnEnd: `span ${duration}`, ...backgroundStyle, borderColor: borderColor, color: textColor }}>
+                                style={{ gridColumnStart: startCol, gridColumnEnd: `span ${duration}`, ...bg, borderColor: bdr, color: txt }} 
+                                title={`${item.title} (${item.startDate} ~ ${item.endDate})`}>
                                 {item.types?.includes('Project') && <Flag size={10} className="mr-1 fill-current" />}{item.title}
                             </div>
                         </div>
@@ -270,7 +305,6 @@ const GanttChart = ({ activities, project }) => {
   );
 };
 
-// [수정] Project Section with Teacher Feedback
 const CASProjectSection = ({ project, onEdit, isTeacherMode, onApprove, onRevoke, onFeedback }) => {
     const displayProject = project || { title: '프로젝트를 계획해보세요!', description: '아직 등록된 프로젝트가 없습니다.', status: 'Planned', startDate: '', endDate: '' };
     const [open, setOpen] = useState(false);
@@ -448,7 +482,9 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onRevoke, onFeedback
             )}
             {open && (
                 <div className="mt-2 bg-blue-50 p-3 rounded-xl">
-                    <div className="text-xs text-blue-800 mb-2 p-2 bg-blue-100 rounded opacity-70">💡 <strong>피드백 팁:</strong> 1. 칭찬 2. 질문 3. 제안</div>
+                    <div className="text-xs text-blue-800 mb-2 p-2 bg-blue-100 rounded opacity-70">
+                        💡 <strong>피드백 팁:</strong> 1. 칭찬 2. 질문 3. 제안
+                    </div>
                     <textarea className="w-full p-2 border rounded mb-2 text-sm h-20" placeholder="학생에게 줄 피드백을 입력하세요..." value={fb} onChange={e=>setFb(e.target.value)}/>
                     <div className="flex justify-end gap-2">
                         <button onClick={()=>setOpen(false)} className="text-slate-500 text-xs font-bold">취소</button>
@@ -471,7 +507,7 @@ const App = () => {
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loginError, setLoginError] = useState(null);
-  const [selectedStudent, setSelectedStudent] = useState(null); // Changed default to null for dropdown
+  const [selectedStudent, setSelectedStudent] = useState('all');
 
   useEffect(() => {
     if (!auth) { setLoading(false); return; }
@@ -489,31 +525,15 @@ const App = () => {
       } catch(e) { setLoginError(e.message); }
   };
 
-  const handleLogout = async () => { if(auth) await signOut(auth); setRole(null); setSelectedStudent(null); };
+  const handleLogout = async () => { if(auth) await signOut(auth); setRole(null); setSelectedStudent('all'); };
 
   useEffect(() => {
     if (!user || !db || !appId) return;
-    
-    // 1. Activities Fetch
     const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'activities'));
     const unsub1 = onSnapshot(q, (s) => setActivities(s.docs.map(d => ({ ...d.data(), id: d.id }))));
-    
-    // 2. Project Fetch - Dynamic path based on role/selection
-    const targetStudentId = role === 'student' ? user.uid : selectedStudent;
-    
-    let unsub2 = () => {};
-    if (targetStudentId) {
-        const projectRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${targetStudentId}`);
-        unsub2 = onSnapshot(projectRef, (doc) => {
-            if(doc.exists()) setProject(doc.data());
-            else setProject(null); // Reset if no project found for selected student
-        });
-    } else {
-        setProject(null); // Clear project when no student selected in teacher mode
-    }
-
+    const unsub2 = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${user.uid}`), (d) => { if(d.exists()) setProject(d.data()); });
     return () => { unsub1(); unsub2(); };
-  }, [user, role, selectedStudent]);
+  }, [user, role]);
 
   const handleAddActivity = async (newActivity) => {
       if (!user || !db) return;
@@ -557,42 +577,15 @@ const App = () => {
 
   const handleSaveProject = async (updatedProject) => {
       if (!db || !user) return;
-      // Teacher edits save to the selected student's project, Student saves to their own.
-      const targetUid = role === 'student' ? user.uid : selectedStudent;
-      if (!targetUid) return;
-
-      try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${targetUid}`), updatedProject); } 
+      try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${user.uid}`), updatedProject); } 
       catch (e) { console.error("Error:", e); }
-  };
-
-  // Teacher Project Handlers
-  const handleProjectApprove = async () => {
-      if (!db || !selectedStudent) return;
-      // We assume project exists if we are here. We update specific fields.
-      // Since `setDoc` with merge is not used above for simplicity in full object saves, 
-      // here for status update `updateDoc` is better, BUT `project` is a single doc.
-      // We need to refer to the same doc path.
-      const projectRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${selectedStudent}`);
-      try { await updateDoc(projectRef, { approvalStatus: 'Approved' }); } catch(e) { alert("Error approving project: " + e.message); }
-  };
-
-  const handleProjectRevoke = async () => {
-      if (!db || !selectedStudent) return;
-      const projectRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${selectedStudent}`);
-      try { await updateDoc(projectRef, { approvalStatus: 'Pending' }); } catch(e) { alert("Error revoking project: " + e.message); }
-  };
-
-  const handleProjectFeedback = async (text) => {
-       if (!db || !selectedStudent) return;
-       const projectRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${selectedStudent}`);
-       try { await updateDoc(projectRef, { feedback: text }); } catch(e) { alert("Error saving feedback: " + e.message); }
   };
 
   // --- CSV Export Logic ---
   const handleExportCSV = () => {
       const myActivities = role === 'student' 
           ? activities.filter(a => a.studentId === user.uid)
-          : (selectedStudent ? activities.filter(a => a.studentId === selectedStudent) : []);
+          : (selectedStudent === 'all' ? activities : activities.filter(a => a.studentId === selectedStudent));
 
       if (myActivities.length === 0) { alert("내보낼 활동이 없습니다."); return; }
 
@@ -617,6 +610,25 @@ const App = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+  };
+
+  // [수정] Teacher Project Handlers (Missing in previous version context)
+  const handleProjectApprove = async () => {
+      if (!db || !selectedStudent) return;
+      const projectRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${selectedStudent}`);
+      try { await updateDoc(projectRef, { approvalStatus: 'Approved' }); } catch(e) { alert("Error approving project: " + e.message); }
+  };
+
+  const handleProjectRevoke = async () => {
+      if (!db || !selectedStudent) return;
+      const projectRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${selectedStudent}`);
+      try { await updateDoc(projectRef, { approvalStatus: 'Pending' }); } catch(e) { alert("Error revoking project: " + e.message); }
+  };
+
+  const handleProjectFeedback = async (text) => {
+       if (!db || !selectedStudent) return;
+       const projectRef = doc(db, 'artifacts', appId, 'public', 'data', 'projects', `project-${selectedStudent}`);
+       try { await updateDoc(projectRef, { feedback: text }); } catch(e) { alert("Error saving feedback: " + e.message); }
   };
 
   if (loading) return <div className="h-screen flex items-center justify-center"><Loader className="animate-spin"/></div>;
@@ -673,7 +685,6 @@ const App = () => {
             </div>
         )}
         
-        {/* 교사 모드에서 학생 미선택 시 안내 메시지 표시 */}
         {role === 'teacher' && !selectedStudent ? (
             <div className="text-center py-20 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
                 <Users size={48} className="mx-auto text-slate-300 mb-4" />
@@ -693,7 +704,6 @@ const App = () => {
                     </div>
                 </section>
                 
-                {/* [수정] 교사도 프로젝트 섹션 볼 수 있음 (단, 학생 선택 시) */}
                 <CASProjectSection 
                     project={project} 
                     onEdit={() => setShowProjectModal(true)} 
