@@ -47,7 +47,7 @@ const myFirebaseConfig = {
 const TEACHER_WHITELIST = [
   "teacher1@gmail.com",
   "gassak3914@gmail.com",
-  "my.teacher.email@gmail.com" // 본인 이메일 (테스트용)
+  "entheos210@gmail.com" // 본인 이메일 (테스트용)
 ];
 
 const STUDENT_WHITELIST = [
@@ -66,15 +66,20 @@ try {
     : (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null);
 
   if (configToUse) {
+    // [진단용 로그] 키 앞자리 5글자만 출력하여 확인 (보안상 전체 출력 X)
+    console.log("🔥 [진단 모드] Firebase 초기화 시도");
+    console.log("🔑 현재 적용된 API Key (앞 5자리):", configToUse.apiKey ? configToUse.apiKey.substring(0, 5) + "..." : "없음");
+    
     const app = initializeApp(configToUse);
     auth = getAuth(app);
     db = getFirestore(app);
     appId = configToUse.projectId || 'cas-app';
+    console.log("✅ Firebase 초기화 성공");
   } else {
-    console.warn("Firebase Config Missing. Please update myFirebaseConfig.");
+    console.warn("⚠️ Firebase Config가 없습니다. 코드를 확인해주세요.");
   }
 } catch (e) {
-  console.error("Init Error:", e);
+  console.error("❌ Firebase 초기화 에러:", e);
 }
 
 // --- Constants ---
@@ -116,8 +121,8 @@ const LoginView = ({ onLogin, errorMsg }) => {
             />
         </div>
 
-        <h1 className="text-3xl font-black text-slate-800 mb-2">봉황IB CAS</h1>
-        <p className="text-slate-500 mb-8">학생의 성장을 기록하고 공유하는<br/>배움과 베풂이 공존하는</p>
+        <h1 className="text-3xl font-black text-slate-800 mb-2">OpenBac CAS</h1>
+        <p className="text-slate-500 mb-8">학생의 성장을 기록하고 공유하는<br/>가장 스마트한 방법</p>
         
         {errorMsg && (
             <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm mb-6 flex items-start gap-2 text-left animate-pulse">
@@ -372,11 +377,10 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onRevoke, onFeedback
             <div className="flex justify-between mb-2">
                 <div className="flex gap-2 mb-2 flex-wrap">
                     {activity.types?.map(type => { const colors = getTypeColor(type); return <span key={type} className={`inline-block px-2 py-1 rounded text-xs font-bold border ${colors.label}`}>{type === 'Creativity' ? '창의 (C)' : type === 'Activity' ? '활동 (A)' : '봉사 (S)'}</span> })}
-                </div>
-                <div className="flex items-center gap-2">
                     <span className={`inline-block px-2 py-1 rounded text-xs font-bold border ${activity.status==='Approved'?'bg-green-100 text-green-600 border-green-200':'bg-orange-100 text-orange-600 border-orange-200'}`}>{activity.status==='Approved'?'승인됨 (Approved)':'검토 중 (Pending)'}</span>
-                    <button onClick={() => onDelete(activity.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50" title="활동 삭제"><Trash2 size={16} /></button>
                 </div>
+                {/* Delete Button Added Here */}
+                <button onClick={() => onDelete(activity.id)} className="text-slate-300 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 self-start" title="활동 삭제"><Trash2 size={16} /></button>
             </div>
             <h3 className="font-bold text-lg mb-1">{activity.title}</h3>
             <div className="text-sm text-slate-500 mb-3 flex items-center gap-2"><Calendar size={14}/> {activity.startDate} ~ {activity.endDate} • {activity.hours}h {isTeacherMode && <span className="bg-slate-100 px-2 rounded text-xs ml-2">{activity.studentName}</span>}</div>
@@ -403,16 +407,24 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onRevoke, onFeedback
             {isTeacherMode && (
                 <div className="flex gap-2 mt-3 justify-end border-t pt-3">
                     <button onClick={()=>setOpen(!open)} className="text-blue-600 text-sm font-bold flex items-center gap-1"><MessageSquarePlus size={16}/> 피드백</button>
+                    
+                    {/* Conditional Approval Button */}
                     {activity.status === 'Pending' ? (
-                        <button onClick={()=>onApprove(activity.id)} className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-green-600 transition-colors"><ThumbsUp size={14}/> 승인</button>
+                        <button onClick={()=>onApprove(activity.id)} className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-green-600 transition-colors">
+                            <ThumbsUp size={14}/> 승인
+                        </button>
                     ) : (
-                        <button onClick={()=>onRevoke(activity.id)} className="bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-600 transition-colors"><RotateCcw size={14}/> 승인 취소</button>
+                        <button onClick={()=>onRevoke(activity.id)} className="bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-600 transition-colors">
+                            <RotateCcw size={14}/> 승인 취소
+                        </button>
                     )}
                 </div>
             )}
             {open && (
                 <div className="mt-2 bg-blue-50 p-3 rounded-xl">
-                    <div className="text-xs text-blue-800 mb-2 p-2 bg-blue-100 rounded opacity-70">💡 <strong>피드백 팁:</strong> 1. 칭찬 2. 질문 3. 제안</div>
+                    <div className="text-xs text-blue-800 mb-2 p-2 bg-blue-100 rounded opacity-70">
+                        💡 <strong>피드백 팁:</strong> 1. 칭찬(구체적 노력) 2. 질문(생각 확장) 3. 제안(다음 단계)
+                    </div>
                     <textarea className="w-full p-2 border rounded mb-2 text-sm h-20" placeholder="학생에게 줄 피드백을 입력하세요..." value={fb} onChange={e=>setFb(e.target.value)}/>
                     <div className="flex justify-end gap-2">
                         <button onClick={()=>setOpen(false)} className="text-slate-500 text-xs font-bold">취소</button>
@@ -450,7 +462,14 @@ const App = () => {
           if(r==='teacher' && !TEACHER_WHITELIST.includes(res.user.email)) { await signOut(auth); return setLoginError("교사 명단에 없습니다."); }
           if(r==='student' && !STUDENT_WHITELIST.includes(res.user.email)) { await signOut(auth); return setLoginError("학생 명단에 없습니다."); }
           setRole(r); setLoginError(null);
-      } catch(e) { setLoginError(e.message); }
+      } catch(e) { 
+        console.error("Login failed", e);
+        if (e.code === 'auth/invalid-api-key') {
+            setLoginError("API Key가 잘못되었습니다. Firebase 콘솔에서 확인해주세요.");
+        } else {
+            setLoginError("로그인 실패: " + e.message);
+        }
+      }
   };
 
   const handleLogout = async () => { if(auth) await signOut(auth); setRole(null); setSelectedStudent('all'); };
