@@ -33,7 +33,7 @@ import {
 // 현재 미리보기 환경 호환성을 위해 직접 입력 방식으로 복구했습니다.
 // =================================================================
 const myFirebaseConfig = {
-  apiKey: "AIzaSyBEVbZo21kLIZLMbBwlM9bclJ0qXQzupv8",
+  apiKey: "AIzaSyA0cmpCyiVuUVeBwpID0HDKKKEd7xngP7U",
   authDomain: "cas-journey-3a3c6.firebaseapp.com",
   projectId: "cas-journey-3a3c6",
   storageBucket: "cas-journey-3a3c6.firebasestorage.app",
