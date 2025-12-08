@@ -46,13 +46,13 @@ const myFirebaseConfig = {
 // =================================================================
 const TEACHER_WHITELIST = [
   "teacher1@gmail.com",
-  "gassak3914@gmail.com",
+  "principal@school.edu",
   "entheos210@gmail.com" // 본인 이메일 (테스트용)
 ];
 
 const STUDENT_WHITELIST = [
   "student1@gmail.com",
-  "gassak3914@gmail.com",
+  "kim.student@school.edu",
   "entheos210@gmail.com" // 본인 이메일 (테스트용)
 ];
 // =================================================================
@@ -66,9 +66,9 @@ try {
     : (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null);
 
   if (configToUse) {
-    // [진단용 로그] 키 앞자리 5글자만 출력하여 확인 (보안상 전체 출력 X)
+    // [진단용 로그] 키 앞자리 8글자만 출력하여 확인 (보안상 전체 출력 X)
     console.log("🔥 [진단 모드] Firebase 초기화 시도");
-    console.log("🔑 현재 적용된 API Key (앞 5자리):", configToUse.apiKey ? configToUse.apiKey.substring(0, 5) + "..." : "없음");
+    console.log("🔑 현재 적용된 API Key (앞 8자리):", configToUse.apiKey ? configToUse.apiKey.substring(0, 8) + "..." : "없음");
     
     const app = initializeApp(configToUse);
     auth = getAuth(app);
@@ -408,22 +408,17 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onRevoke, onFeedback
                 <div className="flex gap-2 mt-3 justify-end border-t pt-3">
                     <button onClick={()=>setOpen(!open)} className="text-blue-600 text-sm font-bold flex items-center gap-1"><MessageSquarePlus size={16}/> 피드백</button>
                     
-                    {/* Conditional Approval Button */}
                     {activity.status === 'Pending' ? (
-                        <button onClick={()=>onApprove(activity.id)} className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-green-600 transition-colors">
-                            <ThumbsUp size={14}/> 승인
-                        </button>
+                        <button onClick={()=>onApprove(activity.id)} className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-green-600 transition-colors"><ThumbsUp size={14}/> 승인</button>
                     ) : (
-                        <button onClick={()=>onRevoke(activity.id)} className="bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-600 transition-colors">
-                            <RotateCcw size={14}/> 승인 취소
-                        </button>
+                        <button onClick={()=>onRevoke(activity.id)} className="bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-600 transition-colors"><RotateCcw size={14}/> 승인 취소</button>
                     )}
                 </div>
             )}
             {open && (
                 <div className="mt-2 bg-blue-50 p-3 rounded-xl">
                     <div className="text-xs text-blue-800 mb-2 p-2 bg-blue-100 rounded opacity-70">
-                        💡 <strong>피드백 팁:</strong> 1. 칭찬(구체적 노력) 2. 질문(생각 확장) 3. 제안(다음 단계)
+                        💡 <strong>피드백 팁:</strong> 1. 칭찬 2. 질문 3. 제안
                     </div>
                     <textarea className="w-full p-2 border rounded mb-2 text-sm h-20" placeholder="학생에게 줄 피드백을 입력하세요..." value={fb} onChange={e=>setFb(e.target.value)}/>
                     <div className="flex justify-end gap-2">
@@ -462,14 +457,7 @@ const App = () => {
           if(r==='teacher' && !TEACHER_WHITELIST.includes(res.user.email)) { await signOut(auth); return setLoginError("교사 명단에 없습니다."); }
           if(r==='student' && !STUDENT_WHITELIST.includes(res.user.email)) { await signOut(auth); return setLoginError("학생 명단에 없습니다."); }
           setRole(r); setLoginError(null);
-      } catch(e) { 
-        console.error("Login failed", e);
-        if (e.code === 'auth/invalid-api-key') {
-            setLoginError("API Key가 잘못되었습니다. Firebase 콘솔에서 확인해주세요.");
-        } else {
-            setLoginError("로그인 실패: " + e.message);
-        }
-      }
+      } catch(e) { setLoginError(e.message); }
   };
 
   const handleLogout = async () => { if(auth) await signOut(auth); setRole(null); setSelectedStudent('all'); };
