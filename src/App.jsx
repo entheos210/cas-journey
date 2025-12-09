@@ -133,7 +133,7 @@ const LearningOutcomesProgress = ({ achievedSet, userEmail }) => {
   return (
     <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
       <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold text-slate-800 flex items-center gap-2"><Target size={18} className="text-blue-500"/> 학습 성과 달성 현황</h3>
+          <h3 className="font-bold text-slate-800 flex items-center gap-2"><Target size={18} className="text-blue-500"/> 학습 성과 달성 현황 (Learning Outcomes)</h3>
           <div className="flex items-center gap-1 text-xs font-medium text-slate-400 bg-slate-50 px-2 py-1 rounded-full"><User size={12} />{userEmail}</div>
       </div>
       <div className="grid grid-cols-7 gap-2">
@@ -475,11 +475,11 @@ const DashboardPage = ({ role }) => {
          )}
          {(role === 'student' || selectedStudent) && <>
              <LearningOutcomesProgress achievedSet={achievedSet} userEmail={role==='student'?user.email:(studentList.find(s=>s.id===selectedStudent)?.name)} />
-             <div className="flex items-center justify-between font-bold text-slate-800 mb-2"><div className="flex gap-2 items-center"><Target size={20} className="text-blue-500"/> 진척도</div><span className="text-xs bg-slate-100 px-2 py-1 rounded-full"><Clock size={12} className="inline mr-1"/>{totalHours}h</span></div>
+             <div className="flex items-center justify-between font-bold text-slate-800 mb-2"><div className="flex gap-2 items-center"><Target size={20} className="text-blue-500"/> 진척도 (Progress)</div><span className="text-xs bg-slate-100 px-2 py-1 rounded-full"><Clock size={12} className="inline mr-1"/>{totalHours}h</span></div>
              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                 <ProgressBar label="창의" current={stats.c} colorClass="bg-purple-500 text-purple-500" icon={PenTool}/>
-                 <ProgressBar label="활동" current={stats.a} colorClass="bg-yellow-500 text-yellow-500" icon={Zap}/>
-                 <ProgressBar label="봉사" current={stats.s} colorClass="bg-red-500 text-red-500" icon={Heart}/>
+                 <ProgressBar label="창의 (Creativity)" current={stats.c} colorClass="bg-purple-500 text-purple-500" icon={PenTool}/>
+                 <ProgressBar label="활동 (Activity)" current={stats.a} colorClass="bg-yellow-500 text-yellow-500" icon={Zap}/>
+                 <ProgressBar label="봉사 (Service)" current={stats.s} colorClass="bg-red-500 text-red-500" icon={Heart}/>
              </div>
              <CASProjectSection project={project} onEdit={()=>setShowProjectModal(true)} isTeacherMode={role==='teacher'} onApprove={handleProjectApprove} onRevoke={handleProjectRevoke} onFeedback={handleProjectFeedback} />
              <GanttChart activities={myActivities} project={project} />
