@@ -107,7 +107,7 @@ const LoginView = ({ onLogin, errorMsg }) => {
             <img src="/logo.png" alt="School Logo" onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/200x200/2563eb/ffffff?text=School"; }} className="w-full h-full object-contain rounded-full shadow-lg shadow-blue-100 bg-white p-1" />
         </div>
         <h1 className="text-3xl font-black text-slate-800 mb-2">봉황IB CAS</h1>
-        <p className="text-slate-500 mb-8">배움과 베풂이 공존하는<br/>봉황공등학교</p>
+        <p className="text-slate-500 mb-8">배움과 베풂이 공존하는<br/>봉황고등학교</p>
         
         {errorMsg && (
             <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm mb-6 flex items-start gap-2 text-left animate-pulse">
@@ -358,7 +358,7 @@ const ActivityCard = ({ activity, isTeacherMode, onApprove, onRevoke, onFeedback
             {open && (
                 <div className="mt-2 bg-blue-50 p-3 rounded-xl">
                     <div className="text-xs text-blue-800 mb-2 p-2 bg-blue-100 rounded opacity-70">
-                        💡 <strong>피드백 팁:</strong> 1. 칭찬 2. 질문 3. 제안
+                        💡 <strong>피드백 팁:</strong> 1. 칭찬(구체적 노력) 2. 질문(생각 확장) 3. 제안(다음 단계)
                     </div>
                     <textarea className="w-full p-2 border rounded mb-2 text-sm h-20" placeholder="학생에게 줄 피드백을 입력하세요..." value={fb} onChange={e=>setFb(e.target.value)}/>
                     <div className="flex justify-end gap-2">
